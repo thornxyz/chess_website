@@ -1,8 +1,8 @@
-import HumanVsComputer from "./pages/HumanVsComputer";
+import Game from "./pages/Game";
 
 export default function App() {
 
   return (
-    <HumanVsComputer />
+    <Game />
   );
 }

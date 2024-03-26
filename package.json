@@ -3,7 +3,6 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://thornxyz.github.io/chess_website/",
   "scripts": {
     "dev": "vite",
     "predeploy": "yarn run build",

@@ -28,6 +28,13 @@ function Game() {
   }
 
   useEffect(() => {
+    const currentMoves = game.history({ verbose: true }).map(move => `${move.from}${move.to}`);
+    setMoves(currentMoves);
+  }, [game.fen()]);
+  
+  
+
+  useEffect(() => {
     console.log(`Selected piece: ${Piece}`);
     handleNewGame();
     if (Piece === "black") {
@@ -36,6 +43,7 @@ function Game() {
       setGamePosition(game.fen());
     }
   }, [Piece]);
+
 
   function findBestMove() {
     engine.evaluatePosition(game.fen(), stockfishLevel);
@@ -49,7 +57,6 @@ function Game() {
         });
 
         setGamePosition(game.fen());
-        updateMoves(bestMove);
         checkGameOver();
       }
     });
@@ -63,20 +70,22 @@ function Game() {
     });
     setGamePosition(game.fen());
 
-    if (move === null) return false;
+    if (!move) {
+      console.log("Invalid move");
+      return false;
+    }
 
     checkGameOver();
-    updateMoves(move.lan);
     findBestMove();
 
     return true;
   }
 
   function checkGameOver() {
-    if (game.isGameOver() || game.isDraw()) {
+    if (game.game_over() || game.in_draw()) {
       setIsGameOver(true);
       setWinner(
-        game.isDraw() ? "Draw" : game.turn() === "w" ? "Black" : "White"
+        game.in_draw() ? "Draw" : game.turn() === "w" ? "Black" : "White"
       );
     }
   }
@@ -96,7 +105,7 @@ function Game() {
   }
 
   return (
-    <div className="flex items-center justify-center h-screen bg-slate-800">
+    <div className="flex overflow-auto items-center justify-center h-screen bg-slate-800">
       <div className="p-2 overflow-auto max-w-screen-lg w-full">
         <div className="flex justify-center mb-2">
           {Object.entries(levels).map(([level, depth]) => (

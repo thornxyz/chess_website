@@ -5,7 +5,6 @@ const ChessBoard = ({ game, isWhiteTurn, onDrop, Piece, boardOrientation, gamePo
   const [boardWrapperStyle, setBoardWrapperStyle] = useState({
     width: '70vw',
     maxWidth: '70vh',
-    margin: '1rem auto',
   });
 
   useEffect(() => {
@@ -14,7 +13,6 @@ const ChessBoard = ({ game, isWhiteTurn, onDrop, Piece, boardOrientation, gamePo
       setBoardWrapperStyle({
         width: isSmallScreen ? '92vw' : '70vw',
         maxWidth: isSmallScreen ? '93vh' : '70vh',
-        margin: '1rem auto',
       });
     }
 
@@ -30,7 +28,7 @@ const ChessBoard = ({ game, isWhiteTurn, onDrop, Piece, boardOrientation, gamePo
   const combinedBoardOrientation = boardOrientation || (Piece ? (Piece === 'black' ? 'black' : 'white') : (isWhiteTurn ? 'white' : 'black'));
 
   return (
-    <div className="flex justify-center" style={boardWrapperStyle}>
+    <div style={boardWrapperStyle}>
       <Chessboard
         id="Chessboard"
         position={gamePosition || game.fen()}

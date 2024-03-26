@@ -1,0 +1,31 @@
+
+@media only screen and (max-width: 700px) {
+    #boardArea {
+        flex-direction: column;
+    }
+
+    #movesArea {
+        margin-top: 1rem;
+        width: 100%;
+        margin-right: 1.5rem;
+        height: 110px;
+        margin-bottom: 1rem;
+    }
+
+    #moveLog {
+        display: flex;
+        flex-wrap: wrap;
+        padding-right: 0.25rem;
+    }
+    
+    #moveLog li {
+        max-width: 20%; 
+        flex-basis: 20%; 
+    }
+}
+
+@media only screen and (min-width: 700px) {
+    #movesArea {
+        height: 70vh;
+    }
+}

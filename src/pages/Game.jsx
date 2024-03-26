@@ -3,6 +3,7 @@ import { Chess } from "chess.js";
 import Engine from "../engine.ts";
 import GameOverModal from "../components/GameOverModal.jsx";
 import ChessBoard from "../components/ChessBoard.jsx";
+import "./Game.css";
 
 function Game() {
   const [Piece, setPiece] = useState("white");
@@ -113,7 +114,7 @@ function Game() {
           ))}
         </div>
 
-        <div className="flex">
+        <div className="w-full flex justify-center items-center" id="boardArea">
           <ChessBoard
             gamePosition={gamePosition}
             Piece={Piece}
@@ -121,13 +122,15 @@ function Game() {
           />
 
           <div
-            className="ml-4 px-4"
-            style={{ maxHeight: "70vh", overflowY: "auto" }}
+            className="overflow-auto ml-6 px-4 py-1 w-1/6 bg-gray-900 flex-col items-center justify-center rounded-md"
+            id="movesArea"
           >
-            <h2 className="text-white font-bold mb-2">Moves:</h2>
-            <ul className="text-white">
+            <h2 className="text-white font-bold mb-2 text-center">Moves:</h2>
+            <ul className="text-white text-center" id="moveLog">
               {moves.map((move, index) => (
-                <li key={index}>{move}</li>
+                <li key={index}>
+                  {index + 1}. {move}
+                </li>
               ))}
             </ul>
           </div>
@@ -135,7 +138,7 @@ function Game() {
 
         {isGameOver && <GameOverModal winner={winner} />}
 
-        <div className="flex justify-center mt-2 space-x-4">
+        <div className="flex justify-center mt-4 space-x-4">
           <select
             value={Piece}
             onChange={(e) => setPiece(e.target.value)}

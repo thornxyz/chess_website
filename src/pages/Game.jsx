@@ -8,8 +8,8 @@ import "./Game.css";
 function Game() {
   const levels = {
     easy: 1,
-    medium: 4,
-    hard: 18,
+    medium: 5,
+    hard: 20,
   };
 
   const engine = useMemo(() => new Engine(), []);
@@ -32,6 +32,8 @@ function Game() {
   const [moveTo, setMoveTo] = useState(null);
   const [showPromotionDialog, setShowPromotionDialog] = useState(false);
   const [moveSquares, setMoveSquares] = useState({});
+
+  // const [captures, setCaptures] = useState([]);
 
   useEffect(() => {
     const currentMoves = game
@@ -150,6 +152,14 @@ function Game() {
         promotion: "q",
       });
 
+      const capturedPiece = move.captured;
+      if (capturedPiece) {
+        const color = Piece === "white" ? "b" : "w";
+        console.log(
+          `Piece captured: ${color + capturedPiece.toUpperCase()} at ${move.to}`
+        );
+      }
+
       if (move === null) {
         const hasMoveOptions = getMoveOptions(square);
         if (hasMoveOptions) setMoveFrom(square);
@@ -171,7 +181,7 @@ function Game() {
 
   function onPromotionPieceSelect(piece) {
     if (piece) {
-      const move = game.move({
+      game.move({
         from: moveFrom,
         to: moveTo,
         promotion: piece[1].toLowerCase() ?? "q",
@@ -193,14 +203,27 @@ function Game() {
     engine.evaluatePosition(game.fen(), stockfishLevel);
     engine.onMessage(({ bestMove }) => {
       if (bestMove) {
-        game.move({
+        const move = game.move({
           from: bestMove.substring(0, 2),
           to: bestMove.substring(2, 4),
           promotion: bestMove.substring(4, 5),
         });
 
         setGamePosition(game.fen());
-        checkGameOver();
+
+        if (move) {
+          checkGameOver();
+
+          const capturedPiece = move.captured;
+          if (capturedPiece) {
+            const color = Piece === "white" ? "w" : "b";
+            console.log(
+              `Piece captured: ${color + capturedPiece.toUpperCase()} at ${
+                move.to
+              }`
+            );
+          }
+        }
       }
     });
   }
@@ -216,6 +239,14 @@ function Game() {
     if (!move) {
       console.log("Invalid move");
       return false;
+    }
+
+    const capturedPiece = move.captured;
+    if (capturedPiece) {
+      const color = Piece === "white" ? "b" : "w";
+      console.log(
+        `Piece captured: ${color + capturedPiece.toUpperCase()} at ${move.to}`
+      );
     }
 
     checkGameOver();
@@ -287,6 +318,7 @@ function Game() {
               boardOrientation={Piece === "black" ? "black" : "white"}
               promotionToSquare={moveTo}
               showPromotionDialog={showPromotionDialog}
+              onPromotionPieceSelect={onPromotionPieceSelect}
               customSquareStyles={{
                 ...moveSquares,
                 ...optionSquares,

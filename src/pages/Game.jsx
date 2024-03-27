@@ -30,6 +30,8 @@ function Game() {
   const [moveFrom, setMoveFrom] = useState("");
   const [rightClickedSquares, setRightClickedSquares] = useState({});
   const [moveTo, setMoveTo] = useState(null);
+  const [showPromotionDialog, setShowPromotionDialog] = useState(false);
+  const [moveSquares, setMoveSquares] = useState({});
 
   useEffect(() => {
     const currentMoves = game
@@ -115,7 +117,6 @@ function Game() {
     }
 
     if (!moveTo) {
-      // check if valid move before showing dialog
       const moves = game.moves({
         moveFrom,
         verbose: true,
@@ -123,17 +124,25 @@ function Game() {
       const foundMove = moves.find(
         (m) => m.from === moveFrom && m.to === square
       );
-      // not a valid move
       if (!foundMove) {
-        // check if clicked on new piece
         const hasMoveOptions = getMoveOptions(square);
-        // if new piece, setMoveFrom, otherwise clear moveFrom
         setMoveFrom(hasMoveOptions ? square : "");
         return;
       }
 
-      // valid move
       setMoveTo(square);
+
+      if (
+        (foundMove.color === "w" &&
+          foundMove.piece === "p" &&
+          square[1] === "8") ||
+        (foundMove.color === "b" &&
+          foundMove.piece === "p" &&
+          square[1] === "1")
+      ) {
+        setShowPromotionDialog(true);
+        return;
+      }
 
       const move = game.move({
         from: moveFrom,
@@ -141,7 +150,6 @@ function Game() {
         promotion: "q",
       });
 
-      // if invalid, setMoveFrom and getMoveOptions
       if (move === null) {
         const hasMoveOptions = getMoveOptions(square);
         if (hasMoveOptions) setMoveFrom(square);
@@ -151,6 +159,7 @@ function Game() {
       if (move) {
         setGamePosition(game.fen());
         setTimeout(findBestMove, 300);
+        checkGameOver();
       }
 
       setMoveFrom("");
@@ -158,6 +167,26 @@ function Game() {
       setOptionSquares({});
       return;
     }
+  }
+
+  function onPromotionPieceSelect(piece) {
+    if (piece) {
+      const move = game.move({
+        from: moveFrom,
+        to: moveTo,
+        promotion: piece[1].toLowerCase() ?? "q",
+      });
+
+      setGamePosition(game.fen());
+      setTimeout(findBestMove, 300);
+      checkGameOver();
+    }
+
+    setMoveFrom("");
+    setMoveTo(null);
+    setShowPromotionDialog(false);
+    setOptionSquares({});
+    return true;
   }
 
   function findBestMove() {
@@ -251,13 +280,15 @@ function Game() {
               animationDuration={200}
               position={gamePosition}
               onPieceDragEnd={endDrag}
-              arePremovesAllowed={true}
               onPieceDragBegin={beginDrag}
               onSquareClick={onSquareClick}
               onSquareRightClick={onSquareRightClick}
               onPieceDrop={onDrop}
               boardOrientation={Piece === "black" ? "black" : "white"}
+              promotionToSquare={moveTo}
+              showPromotionDialog={showPromotionDialog}
               customSquareStyles={{
+                ...moveSquares,
                 ...optionSquares,
                 ...rightClickedSquares,
               }}
@@ -305,9 +336,16 @@ function Game() {
           <button
             className="px-4 bg-green-700 text-white rounded hover:bg-green-900"
             onClick={() => {
-              game.undo();
-              game.undo();
-              setGamePosition(game.fen());
+              if (!isGameOver) {
+                game.undo();
+                game.undo();
+                setGamePosition(game.fen());
+                setMoveSquares({});
+                setOptionSquares({});
+                setRightClickedSquares({});
+              } else {
+                alert("Game over cannot undo");
+              }
             }}
           >
             Undo

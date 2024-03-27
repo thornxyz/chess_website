@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PropTypes from "prop-types";
 
 const boxStyles = {
   base: "border-2 border-solid border-white border-opacity-25 rounded-xl font-bold m-2 p-3 hover:bg-opacity-80 bg-slate-900 bg-opacity-80 shadow-box h-35 w-60 text-white text-center",
@@ -31,5 +32,10 @@ function GameOverModal({ winner, onClose }) {
     </div>
   );
 }
+
+GameOverModal.propTypes = {
+  winner: PropTypes.string.isRequired,
+  onClose: PropTypes.func.isRequired,
+};
 
 export default GameOverModal;

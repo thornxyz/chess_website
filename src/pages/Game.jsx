@@ -2,37 +2,36 @@ import { useMemo, useState, useEffect } from "react";
 import { Chess } from "chess.js";
 import Engine from "../engine.ts";
 import GameOverModal from "../components/GameOverModal.jsx";
-import ChessBoard from "../components/ChessBoard.jsx";
+import { Chessboard } from "react-chessboard";
 import "./Game.css";
 
 function Game() {
-  const [Piece, setPiece] = useState("white");
-
   const levels = {
     easy: 1,
     medium: 4,
     hard: 18,
   };
+
   const engine = useMemo(() => new Engine(), []);
   const game = useMemo(() => new Chess(), []);
 
+  const [Piece, setPiece] = useState("white");
   const [gamePosition, setGamePosition] = useState(game.fen());
   const [stockfishLevel, setStockfishLevel] = useState(1);
   const [isGameOver, setIsGameOver] = useState(false);
   const [winner, setWinner] = useState(null);
   const [moves, setMoves] = useState([]);
-
-  function updateMoves(move) {
-    console.log("Move object:", move);
-    setMoves((prevMoves) => [...prevMoves, move]);
-  }
+  const [boardWrapperStyle, setBoardWrapperStyle] = useState({
+    width: "70vw",
+    maxWidth: "70vh",
+  });
 
   useEffect(() => {
-    const currentMoves = game.history({ verbose: true }).map(move => `${move.from}${move.to}`);
+    const currentMoves = game
+      .history({ verbose: true })
+      .map((move) => `${move.from}${move.to}`);
     setMoves(currentMoves);
   }, [game.fen()]);
-  
-  
 
   useEffect(() => {
     console.log(`Selected piece: ${Piece}`);
@@ -44,10 +43,24 @@ function Game() {
     }
   }, [Piece]);
 
+  useEffect(() => {
+    function handleResize() {
+      const isSmallScreen = window.innerWidth <= 576;
+      setBoardWrapperStyle({
+        width: isSmallScreen ? "92vw" : "70vw",
+        maxWidth: isSmallScreen ? "93vh" : "70vh",
+      });
+    }
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   function findBestMove() {
     engine.evaluatePosition(game.fen(), stockfishLevel);
-
     engine.onMessage(({ bestMove }) => {
       if (bestMove) {
         game.move({
@@ -77,7 +90,6 @@ function Game() {
 
     checkGameOver();
     findBestMove();
-
     return true;
   }
 
@@ -124,20 +136,27 @@ function Game() {
         </div>
 
         <div className="w-full flex justify-center items-center" id="boardArea">
-          <ChessBoard
-            gamePosition={gamePosition}
-            Piece={Piece}
-            onDrop={onDrop}
-          />
+          <div style={boardWrapperStyle}>
+            <Chessboard
+              id="Chessboard"
+              position={gamePosition}
+              onPieceDrop={onDrop}
+              boardOrientation={Piece === "black" ? "black" : "white"}
+              customBoardStyle={{
+                borderRadius: "4px",
+                boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)",
+              }}
+            />
+          </div>
 
           <div
-            className="overflow-auto ml-6 px-4 py-1 w-1/6 bg-gray-900 flex-col items-center justify-center rounded-md"
+            className="overflow-auto ml-6 px-4 py-1 bg-gray-900 flex-col items-center justify-center rounded-md"
             id="movesArea"
           >
             <h2 className="text-white font-bold mb-2 text-center">Moves:</h2>
-            <ul className="text-white text-center" id="moveLog">
+            <ul className="text-white text-left" id="moveLog">
               {moves.map((move, index) => (
-                <li key={index}>
+                <li key={index} className="font-medium text-sm">
                   {index + 1}. {move}
                 </li>
               ))}

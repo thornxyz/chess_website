@@ -26,6 +26,11 @@ function Game() {
     maxWidth: "70vh",
   });
 
+  const [optionSquares, setOptionSquares] = useState({});
+  const [moveFrom, setMoveFrom] = useState("");
+  const [rightClickedSquares, setRightClickedSquares] = useState({});
+  const [moveTo, setMoveTo] = useState(null);
+
   useEffect(() => {
     const currentMoves = game
       .history({ verbose: true })
@@ -58,6 +63,102 @@ function Game() {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  function onSquareRightClick(square) {
+    const colour = "rgba(0, 0, 255, 0.4)";
+    setRightClickedSquares({
+      ...rightClickedSquares,
+      [square]:
+        rightClickedSquares[square] &&
+        rightClickedSquares[square].backgroundColor === colour
+          ? undefined
+          : { backgroundColor: colour },
+    });
+  }
+
+  function getMoveOptions(square) {
+    const moves = game.moves({
+      square,
+      verbose: true,
+    });
+    if (moves.length === 0) {
+      setOptionSquares({});
+      return false;
+    }
+
+    const newSquares = {};
+    moves.map((move) => {
+      newSquares[move.to] = {
+        background:
+          game.get(move.to) &&
+          game.get(move.to).color !== game.get(square).color
+            ? "radial-gradient(circle, rgba(0,0,0,.1) 85%, transparent 85%)"
+            : "radial-gradient(circle, rgba(0,0,0,.1) 25%, transparent 25%)",
+        borderRadius: "50%",
+      };
+      return move;
+    });
+    newSquares[square] = {
+      background: "rgba(255, 255, 0, 0.4)",
+    };
+    setOptionSquares(newSquares);
+    return true;
+  }
+
+  function onSquareClick(square) {
+    setRightClickedSquares({});
+
+    if (!moveFrom) {
+      const hasMoveOptions = getMoveOptions(square);
+      if (hasMoveOptions) setMoveFrom(square);
+      return;
+    }
+
+    if (!moveTo) {
+      // check if valid move before showing dialog
+      const moves = game.moves({
+        moveFrom,
+        verbose: true,
+      });
+      const foundMove = moves.find(
+        (m) => m.from === moveFrom && m.to === square
+      );
+      // not a valid move
+      if (!foundMove) {
+        // check if clicked on new piece
+        const hasMoveOptions = getMoveOptions(square);
+        // if new piece, setMoveFrom, otherwise clear moveFrom
+        setMoveFrom(hasMoveOptions ? square : "");
+        return;
+      }
+
+      // valid move
+      setMoveTo(square);
+
+      const move = game.move({
+        from: moveFrom,
+        to: square,
+        promotion: "q",
+      });
+
+      // if invalid, setMoveFrom and getMoveOptions
+      if (move === null) {
+        const hasMoveOptions = getMoveOptions(square);
+        if (hasMoveOptions) setMoveFrom(square);
+        return;
+      }
+
+      if (move) {
+        setGamePosition(game.fen());
+        setTimeout(findBestMove, 300);
+      }
+
+      setMoveFrom("");
+      setMoveTo(null);
+      setOptionSquares({});
+      return;
+    }
+  }
 
   function findBestMove() {
     engine.evaluatePosition(game.fen(), stockfishLevel);
@@ -116,6 +217,14 @@ function Game() {
     }
   }
 
+  function beginDrag(piece, sourceSquare) {
+    getMoveOptions(sourceSquare);
+  }
+
+  function endDrag(piece, sourceSquare) {
+    getMoveOptions(null);
+  }
+
   return (
     <div className="flex overflow-auto items-center justify-center h-screen bg-slate-800">
       <div className="p-2 overflow-auto max-w-screen-lg w-full">
@@ -139,9 +248,19 @@ function Game() {
           <div style={boardWrapperStyle}>
             <Chessboard
               id="Chessboard"
+              animationDuration={200}
               position={gamePosition}
+              onPieceDragEnd={endDrag}
+              arePremovesAllowed={true}
+              onPieceDragBegin={beginDrag}
+              onSquareClick={onSquareClick}
+              onSquareRightClick={onSquareRightClick}
               onPieceDrop={onDrop}
               boardOrientation={Piece === "black" ? "black" : "white"}
+              customSquareStyles={{
+                ...optionSquares,
+                ...rightClickedSquares,
+              }}
               customBoardStyle={{
                 borderRadius: "4px",
                 boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)",

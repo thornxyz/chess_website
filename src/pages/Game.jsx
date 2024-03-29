@@ -36,11 +36,6 @@ function Game() {
   const [captures, setCaptures] = useState([]);
   const [allCaptures, setAllCaptures] = useState([]);
 
-  function getCaptures(capture) {
-    setCaptures(prevCaptures => [...prevCaptures, capture]);
-    setAllCaptures(prevCaptures => [...prevCaptures, capture]);
-  }  
-
   useEffect(() => {
     const currentMoves = game
       .history({ verbose: true })
@@ -78,6 +73,11 @@ function Game() {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  function getCaptures(capture) {
+    setCaptures((prevCaptures) => [...prevCaptures, capture]);
+    setAllCaptures((prevCaptures) => [...prevCaptures, capture]);
+  }
 
   function onSquareRightClick(square) {
     const colour = "rgba(0, 0, 255, 0.4)";
@@ -230,7 +230,9 @@ function Game() {
           const capturedPiece = move.captured;
           if (capturedPiece) {
             const color = Piece === "white" ? "w" : "b";
-            const capture = `${color + capturedPiece.toUpperCase()} at ${move.to}`;
+            const capture = `${color + capturedPiece.toUpperCase()} at ${
+              move.to
+            }`;
             console.log(capture);
             getCaptures(capture);
           }
@@ -245,6 +247,15 @@ function Game() {
       to: targetSquare,
       promotion: piece[1].toLowerCase() ?? "q",
     });
+
+    if ( move &&
+      ((move.color === "w" && move.piece === "p" && targetSquare[1] === "8") ||
+      (move.color === "b" && move.piece === "p" && targetSquare[1] === "1"))
+    ) {
+      setShowPromotionDialog(true);
+      return;
+    }
+    
     setGamePosition(game.fen());
 
     if (!move) {
@@ -302,12 +313,12 @@ function Game() {
     if (!isGameOver) {
       const lastMove = game.undo();
       if (lastMove && lastMove.captured) {
-        const lastCapture = allCaptures.pop(); 
+        const lastCapture = allCaptures.pop();
         setCaptures((prevCaptures) =>
           prevCaptures.filter((capture) => capture !== lastCapture)
         );
       }
-      const playerMove = game.undo(); 
+      const playerMove = game.undo();
       if (playerMove && playerMove.captured) {
         const lastCapture = allCaptures.pop();
         setCaptures((prevCaptures) =>
@@ -322,7 +333,6 @@ function Game() {
       alert("Game over cannot undo");
     }
   }
-  
 
   return (
     <div className="flex overflow-auto items-center justify-center h-screen bg-slate-800">
@@ -344,13 +354,18 @@ function Game() {
         </div>
 
         <div className="w-full flex justify-center items-center" id="boardArea">
-
-          <div className="bg-gray-600 text-white overflow-auto rounded-md flex-col" id="captureArea">
+          <div
+            className="bg-gray-600 text-white overflow-auto rounded-md flex-col"
+            id="captureArea"
+          >
             <h2 className="font-bold mb-2 text-center">Captures:</h2>
-            <div id="capul" className="w-3/4 flex justify-center">
-              <ul className="text-left ml-4 text-sm font-medium" id="capLog">
+            <div id="capul" className="flex justify-center">
+              <ul className="text-left text-sm font-medium" id="capLog">
                 {captures.map((capture, index) => (
-                  <li key={index}>{index + 1 + ". "}{capture}</li>
+                  <li key={index}>
+                    {index + 1 + ". "}
+                    {capture}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -388,26 +403,28 @@ function Game() {
           >
             <h2 className="text-white font-bold mb-2 text-center">Moves:</h2>
             <div id="moveul">
-            <ul className="text-white text-left w-full" id="moveLog">
-              {moves.map((move, index) => (
-                <li
-                  key={index}
-                  className="font-medium text-sm text-left"
-                  id="moveElement"
-                >
-                  {index % 2 === 0 ? index / 2 + 1 + ". " : ""}
-                  {move}
-                </li>
-              ))}
-            </ul>
+              <ul className="text-white text-left w-full" id="moveLog">
+                {moves.map((move, index) => (
+                  <li
+                    key={index}
+                    className="font-medium text-sm text-left"
+                    id="moveElement"
+                  >
+                    {index % 2 === 0 ? index / 2 + 1 + ". " : ""}
+                    {move}
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
-
         </div>
 
         {isGameOver && <GameOverModal winner={winner} />}
 
-        <div className="flex justify-center items-center gap-4" id="low-buttons">
+        <div
+          className="flex justify-center items-center gap-4"
+          id="low-buttons"
+        >
           <div>
             <select
               value={Piece}
@@ -431,7 +448,9 @@ function Game() {
           <div>
             <button
               className="px-2 py-1 bg-green-700 text-white rounded hover:bg-green-900"
-              onClick={() => {handleUndo()}}
+              onClick={() => {
+                handleUndo();
+              }}
             >
               Undo
             </button>

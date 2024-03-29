@@ -8,6 +8,8 @@ svg {
     }
 
     #movesArea {
+        display: flex;
+        flex-direction: column;
         margin-top: 1rem;
         width: 100%;
         margin-right: 1.5rem;
@@ -16,24 +18,59 @@ svg {
         max-height: 200px;
     }
 
+    #captureArea {
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        width: 100%;
+        margin-left: 1.5rem;
+        margin-right: 1.5rem;
+        height: 50px;
+        margin-bottom: 1rem;
+        max-height: 100px;
+    }
+
     #moveLog {
         display: flex;
         align-items: center;
         flex-wrap: wrap;
         margin-bottom: 0.5rem;
-        max-width: 300px;
+        max-width: 270px;
     }
 
-    #moveLog li {
+    #moveul {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #moveLog li{
         flex-basis: 25%;
+        margin-bottom: 0.1rem;
+    }
+
+    #capLog {
+        display: flex;
+        flex-wrap: wrap;
+
+    }
+
+    #capul li {
+        flex-basis: 50%;
+        margin-bottom: 0.1rem;
     }
 }
 
 @media only screen and (min-width: 700px) {
-    #movesArea {
+
+    #movesArea, #captureArea {
         height: 70vh;
         width: 25vw;
         max-width: 200px;
+    }
+
+    #captureArea {
+        margin-right: 2rem;
     }
 
     #moveLog {
@@ -45,8 +82,16 @@ svg {
         max-width: 150px;
     }
 
-    #moveLog li {
+    #captureLog li {
+        margin-bottom: 0.25rem;
+    }
+
+    #moveLog li{
         margin-bottom: 0.25rem;
         flex-basis: 50%;
+    }
+
+    #low-buttons {
+        margin-top: 1rem;
     }
 }

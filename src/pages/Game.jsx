@@ -32,7 +32,14 @@ function Game() {
   const [moveTo, setMoveTo] = useState(null);
   const [showPromotionDialog, setShowPromotionDialog] = useState(false);
   const [moveSquares, setMoveSquares] = useState({});
-  
+
+  const [captures, setCaptures] = useState([]);
+  const [allCaptures, setAllCaptures] = useState([]);
+
+  function getCaptures(capture) {
+    setCaptures(prevCaptures => [...prevCaptures, capture]);
+    setAllCaptures(prevCaptures => [...prevCaptures, capture]);
+  }  
 
   useEffect(() => {
     const currentMoves = game
@@ -147,7 +154,7 @@ function Game() {
           square[1] === "1")
       ) {
         setShowPromotionDialog(true);
-        // return;
+        return;
       }
 
       const move = game.move({
@@ -159,9 +166,9 @@ function Game() {
       const capturedPiece = move.captured;
       if (capturedPiece) {
         const color = Piece === "white" ? "b" : "w";
-        console.log(
-          `Piece captured: ${color + capturedPiece.toUpperCase()} at ${move.to}`
-        );
+        const capture = `${color + capturedPiece.toUpperCase()} at ${move.to}`;
+        console.log(capture);
+        getCaptures(capture);
       }
 
       if (move === null) {
@@ -185,21 +192,23 @@ function Game() {
 
   function onPromotionPieceSelect(piece) {
     if (piece) {
-      game.move({
+      const move = game.move({
         from: moveFrom,
         to: moveTo,
         promotion: piece[1].toLowerCase() ?? "q",
       });
 
-      setGamePosition(game.fen());
-      setTimeout(findBestMove, 300);
-      checkGameOver();
+      if (move) {
+        setGamePosition(game.fen());
+        checkGameOver();
+      }
     }
 
     setMoveFrom("");
     setMoveTo(null);
     setShowPromotionDialog(false);
     setOptionSquares({});
+    setTimeout(findBestMove(), 300);
     return true;
   }
 
@@ -221,11 +230,9 @@ function Game() {
           const capturedPiece = move.captured;
           if (capturedPiece) {
             const color = Piece === "white" ? "w" : "b";
-            console.log(
-              `Piece captured: ${color + capturedPiece.toUpperCase()} at ${
-                move.to
-              }`
-            );
+            const capture = `${color + capturedPiece.toUpperCase()} at ${move.to}`;
+            console.log(capture);
+            getCaptures(capture);
           }
         }
       }
@@ -248,9 +255,9 @@ function Game() {
     const capturedPiece = move.captured;
     if (capturedPiece) {
       const color = Piece === "white" ? "b" : "w";
-      console.log(
-        `Piece captured: ${color + capturedPiece.toUpperCase()} at ${move.to}`
-      );
+      const capture = `${color + capturedPiece.toUpperCase()} at ${move.to}`;
+      console.log(capture);
+      getCaptures(capture);
     }
 
     checkGameOver();
@@ -271,6 +278,8 @@ function Game() {
     setIsGameOver(false);
     setWinner(null);
     game.reset();
+    setCaptures([]);
+    setAllCaptures([]);
     setMoves([]);
     const selectedPiece = Piece || "white";
 
@@ -289,13 +298,39 @@ function Game() {
     getMoveOptions(null);
   }
 
+  function handleUndo() {
+    if (!isGameOver) {
+      const lastMove = game.undo();
+      if (lastMove && lastMove.captured) {
+        const lastCapture = allCaptures.pop(); 
+        setCaptures((prevCaptures) =>
+          prevCaptures.filter((capture) => capture !== lastCapture)
+        );
+      }
+      const playerMove = game.undo(); 
+      if (playerMove && playerMove.captured) {
+        const lastCapture = allCaptures.pop();
+        setCaptures((prevCaptures) =>
+          prevCaptures.filter((capture) => capture !== lastCapture)
+        );
+      }
+      setGamePosition(game.fen());
+      setMoveSquares({});
+      setOptionSquares({});
+      setRightClickedSquares({});
+    } else {
+      alert("Game over cannot undo");
+    }
+  }
+  
+
   return (
     <div className="flex overflow-auto items-center justify-center h-screen bg-slate-800">
       <div className="p-2 overflow-auto max-w-screen-lg w-full">
         <div className="flex justify-center mb-2">
           {Object.entries(levels).map(([level, depth]) => (
             <button
-              className="px-4 py-2 text-black rounded m-2"
+              className="px-4 py-1 text-black rounded m-2"
               key={level}
               style={{
                 backgroundColor:
@@ -309,6 +344,18 @@ function Game() {
         </div>
 
         <div className="w-full flex justify-center items-center" id="boardArea">
+
+          <div className="bg-gray-600 text-white overflow-auto rounded-md flex-col" id="captureArea">
+            <h2 className="font-bold mb-2 text-center">Captures:</h2>
+            <div id="capul" className="w-3/4 flex justify-center">
+              <ul className="text-left ml-4 text-sm font-medium" id="capLog">
+                {captures.map((capture, index) => (
+                  <li key={index}>{index + 1 + ". "}{capture}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
           <div style={boardWrapperStyle}>
             <Chessboard
               id="Chessboard"
@@ -336,15 +383,16 @@ function Game() {
           </div>
 
           <div
-            className="overflow-auto ml-6 px-4 py-1 bg-gray-900 flex-col items-center justify-center rounded-md"
+            className="overflow-auto ml-6 px-4 py-1 bg-gray-900 flex-col rounded-md"
             id="movesArea"
           >
             <h2 className="text-white font-bold mb-2 text-center">Moves:</h2>
-            <ul className="text-white text-left ml-4" id="moveLog">
+            <div id="moveul">
+            <ul className="text-white text-left w-full" id="moveLog">
               {moves.map((move, index) => (
                 <li
                   key={index}
-                  className="font-medium text-sm"
+                  className="font-medium text-sm text-left"
                   id="moveElement"
                 >
                   {index % 2 === 0 ? index / 2 + 1 + ". " : ""}
@@ -352,45 +400,42 @@ function Game() {
                 </li>
               ))}
             </ul>
+            </div>
           </div>
+
         </div>
 
         {isGameOver && <GameOverModal winner={winner} />}
 
-        <div className="flex justify-center mt-4 space-x-4">
-          <select
-            value={Piece}
-            onChange={(e) => setPiece(e.target.value)}
-            className="py-2 text-white rounded my-1 bg-green-700 hover:bg-green-900"
-          >
-            <option value="white">White</option>
-            <option value="black">Black</option>
-          </select>
+        <div className="flex justify-center items-center gap-4" id="low-buttons">
+          <div>
+            <select
+              value={Piece}
+              onChange={(e) => setPiece(e.target.value)}
+              className=" text-white py-1 px-1 rounded bg-green-700 hover:bg-green-900"
+            >
+              <option value="white">White</option>
+              <option value="black">Black</option>
+            </select>
+          </div>
 
-          <button
-            className="px-4 bg-green-700 text-white rounded hover:bg-green-900"
-            onClick={() => handleNewGame()}
-          >
-            New game
-          </button>
+          <div>
+            <button
+              className="px-2 py-1 bg-green-700 text-white rounded hover:bg-green-900"
+              onClick={() => handleNewGame()}
+            >
+              New game
+            </button>
+          </div>
 
-          <button
-            className="px-4 bg-green-700 text-white rounded hover:bg-green-900"
-            onClick={() => {
-              if (!isGameOver) {
-                game.undo();
-                game.undo();
-                setGamePosition(game.fen());
-                setMoveSquares({});
-                setOptionSquares({});
-                setRightClickedSquares({});
-              } else {
-                alert("Game over cannot undo");
-              }
-            }}
-          >
-            Undo
-          </button>
+          <div>
+            <button
+              className="px-2 py-1 bg-green-700 text-white rounded hover:bg-green-900"
+              onClick={() => {handleUndo()}}
+            >
+              Undo
+            </button>
+          </div>
         </div>
       </div>
     </div>

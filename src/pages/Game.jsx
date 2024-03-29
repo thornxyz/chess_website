@@ -9,7 +9,7 @@ function Game() {
   const levels = {
     easy: 1,
     medium: 5,
-    hard: 20,
+    hard: 18,
   };
 
   const engine = useMemo(() => new Engine(), []);
@@ -32,13 +32,17 @@ function Game() {
   const [moveTo, setMoveTo] = useState(null);
   const [showPromotionDialog, setShowPromotionDialog] = useState(false);
   const [moveSquares, setMoveSquares] = useState({});
-
-  // const [captures, setCaptures] = useState([]);
+  
 
   useEffect(() => {
     const currentMoves = game
       .history({ verbose: true })
-      .map((move) => `${move.from}${move.to}`);
+      .map(
+        (move) =>
+          `${move.piece === "p" ? "" : move.piece.toUpperCase()}${move.from}${
+            move.to
+          }`
+      );
     setMoves(currentMoves);
   }, [game.fen()]);
 
@@ -143,7 +147,7 @@ function Game() {
           square[1] === "1")
       ) {
         setShowPromotionDialog(true);
-        return;
+        // return;
       }
 
       const move = game.move({
@@ -250,7 +254,7 @@ function Game() {
     }
 
     checkGameOver();
-    findBestMove();
+    setTimeout(findBestMove, 300);
     return true;
   }
 
@@ -336,10 +340,15 @@ function Game() {
             id="movesArea"
           >
             <h2 className="text-white font-bold mb-2 text-center">Moves:</h2>
-            <ul className="text-white text-left" id="moveLog">
+            <ul className="text-white text-left ml-4" id="moveLog">
               {moves.map((move, index) => (
-                <li key={index} className="font-medium text-sm">
-                  {index + 1}. {move}
+                <li
+                  key={index}
+                  className="font-medium text-sm"
+                  id="moveElement"
+                >
+                  {index % 2 === 0 ? index / 2 + 1 + ". " : ""}
+                  {move}
                 </li>
               ))}
             </ul>

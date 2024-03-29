@@ -1,3 +1,7 @@
+svg {
+    cursor: pointer;
+}
+
 @media only screen and (max-width: 700px) {
     #boardArea {
         flex-direction: column;
@@ -14,13 +18,14 @@
 
     #moveLog {
         display: flex;
+        align-items: center;
         flex-wrap: wrap;
         margin-bottom: 0.5rem;
+        max-width: 300px;
     }
 
     #moveLog li {
-        max-width: 20%;
-        flex-basis: 20%;
+        flex-basis: 25%;
     }
 }
 
@@ -34,6 +39,7 @@
     #moveLog {
         margin-left: 15px;
         display: flex;
+        align-items: center;
         flex-direction: row;
         flex-wrap: wrap;
         max-width: 150px;

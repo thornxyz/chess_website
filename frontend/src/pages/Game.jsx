@@ -3,9 +3,10 @@ import { Chess } from "chess.js";
 import Engine from "../engine.ts";
 import GameOverModal from "../components/GameOverModal.jsx";
 import { Chessboard } from "react-chessboard";
+import PropTypes from "prop-types";
 import "./Game.css";
 
-function Game() {
+function Game(props) {
   const levels = {
     easy: 1,
     medium: 5,
@@ -41,9 +42,7 @@ function Game() {
       .history({ verbose: true })
       .map(
         (move) =>
-          `${move.piece === "p" ? "" : move.piece.toUpperCase()}${move.from}${
-            move.to
-          }`
+          `${move.piece === "p" ? "" : move.piece.toUpperCase()}${move.to}`
       );
     setMoves(currentMoves);
   }, [game.fen()]);
@@ -208,7 +207,7 @@ function Game() {
     setMoveTo(null);
     setShowPromotionDialog(false);
     setOptionSquares({});
-    setTimeout(findBestMove(), 300);
+    setTimeout(findBestMove, 300);
     return true;
   }
 
@@ -248,14 +247,15 @@ function Game() {
       promotion: piece[1].toLowerCase() ?? "q",
     });
 
-    if ( move &&
-      ((move.color === "w" && move.piece === "p" && targetSquare[1] === "8") ||
-      (move.color === "b" && move.piece === "p" && targetSquare[1] === "1"))
-    ) {
-      setShowPromotionDialog(true);
-      return;
-    }
-    
+    // if (
+    //   move &&
+    //   ((move.color === "w" && move.piece === "p" && targetSquare[1] === "8") ||
+    //     (move.color === "b" && move.piece === "p" && targetSquare[1] === "1"))
+    // ) {
+    //   setShowPromotionDialog(true);
+    //   return;
+    // }
+
     setGamePosition(game.fen());
 
     if (!move) {
@@ -301,14 +301,6 @@ function Game() {
     }
   }
 
-  function beginDrag(piece, sourceSquare) {
-    getMoveOptions(sourceSquare);
-  }
-
-  function endDrag(piece, sourceSquare) {
-    getMoveOptions(null);
-  }
-
   function handleUndo() {
     if (!isGameOver) {
       const lastMove = game.undo();
@@ -335,12 +327,12 @@ function Game() {
   }
 
   return (
-    <div className="flex overflow-auto items-center justify-center h-screen bg-slate-800">
+    <div className="flex overflow-auto justify-center h-screen bg-slate-800">
       <div className="p-2 overflow-auto max-w-screen-lg w-full">
-        <div className="flex justify-center mb-2">
+        <div className="flex justify-center mb-1 mt-2">
           {Object.entries(levels).map(([level, depth]) => (
             <button
-              className="px-4 py-1 text-black rounded m-2"
+              className="px-4 py-1 text-black rounded m-1"
               key={level}
               style={{
                 backgroundColor:
@@ -376,8 +368,12 @@ function Game() {
               id="Chessboard"
               animationDuration={200}
               position={gamePosition}
-              onPieceDragEnd={endDrag}
-              onPieceDragBegin={beginDrag}
+              onPieceDragEnd={(piece, sourceSquare) => {
+                getMoveOptions(null);
+              }}
+              onPieceDragBegin={(piece, sourceSquare) => {
+                getMoveOptions(sourceSquare);
+              }}
               onSquareClick={onSquareClick}
               onSquareRightClick={onSquareRightClick}
               onPieceDrop={onDrop}
@@ -410,7 +406,7 @@ function Game() {
                     className="font-medium text-sm text-left"
                     id="moveElement"
                   >
-                    {index % 2 === 0 ? index / 2 + 1 + ". " : ""}
+                    <span className="font-thin">{index % 2 === 0 ? index / 2 + 1 + ". " : ""}</span>
                     {move}
                   </li>
                 ))}
@@ -419,7 +415,13 @@ function Game() {
           </div>
         </div>
 
-        {isGameOver && <GameOverModal winner={winner} />}
+        {isGameOver && (
+          <GameOverModal
+            winner={winner}
+            username={props.username}
+            game={moves.toString()}
+          />
+        )}
 
         <div
           className="flex justify-center items-center gap-4"
@@ -462,3 +464,7 @@ function Game() {
 }
 
 export default Game;
+
+Game.propTypes = {
+  username: PropTypes.string.isRequired,
+};

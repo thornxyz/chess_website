@@ -1,0 +1,28 @@
+use chessdb;
+
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(20) UNIQUE NOT NULL,
+    pwd_hash VARCHAR(100) NOT NULL,
+    doj DATE NOT NULL
+);
+
+CREATE TABLE chess_games (
+    game_id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(20) not null,
+    game_date DATE not null,
+    winner VARCHAR(10) not null,
+    FOREIGN KEY (username) REFERENCES users(username)
+);
+
+CREATE TABLE game_data (
+    game_id INT primary key,
+    game TEXT,
+    FOREIGN KEY (game_id) REFERENCES chess_games(game_id) 
+);
+
+
+
+
+
+

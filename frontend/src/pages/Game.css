@@ -10,7 +10,7 @@ svg {
     #movesArea {
         display: flex;
         flex-direction: column;
-        margin-top: 1rem;
+        margin-top: 0.5rem;
         width: 100%;
         margin-right: 1.5rem;
         height: 110px;
@@ -22,12 +22,11 @@ svg {
     #captureArea {
         display: flex;
         align-items: center;
-        flex-direction: column;
         width: 100%;
         margin-left: 1.5rem;
         margin-right: 1.5rem;
         height: 50px;
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem;
         max-height: 100px;
         max-width: 400px;
     }
@@ -37,7 +36,7 @@ svg {
         align-items: center;
         flex-wrap: wrap;
         margin-bottom: 0.5rem;
-        max-width: 100%;
+        width: 100%;
     }
 
     #moveul {
@@ -51,7 +50,7 @@ svg {
     }
 
     #moveLog li{
-        flex-basis: 25%;
+        flex-basis: 16.6%;
         margin-bottom: 0.1rem;
     }
 
@@ -72,7 +71,7 @@ svg {
     #movesArea {
         height: 70vh;
         width: 25vw;
-        max-width: 190px;
+        max-width: 140px;
     }
 
     #captureArea {

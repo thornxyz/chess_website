@@ -8,9 +8,13 @@ const boxStyles = {
 
 function GameOverModal({ winner, username, game }) {
   const [modalVisible, setModalVisible] = useState(true);
+  const [buttonClicked, setButtonClicked] = useState(false);
 
   const handleOkClick = async () => {
-    const currentDate = new Date().toISOString().split("T")[0];
+    if(buttonClicked) return;
+    setButtonClicked(true);
+    
+    const currentDate = new Date().toISOString();
 
     try {
       const response = await axios.post(`${import.meta.env.VITE_API_URL}addChessGame`, {

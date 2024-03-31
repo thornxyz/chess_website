@@ -47,7 +47,7 @@ function Account() {
             {games.games.map((game, index) => (
               <tr key={index}>
                 <td className="border px-4 py-2">
-                  {new Date(game.game_date).toLocaleDateString()}
+                  {new Date(game.game_date).toLocaleString()}
                 </td>
                 <td className="border px-4 py-2">{game.winner}</td>
                 <td className="border px-4 py-2 break-all">

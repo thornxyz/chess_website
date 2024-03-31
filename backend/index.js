@@ -162,22 +162,17 @@ const verifyUser = (req, res, next) => {
 }
 
 app.post('/getAllGames', async (req, res) => {
-    try {
-        const { username } = req.body;
-        const sql = "SELECT game_data.game, chess_games.game_date, chess_games.winner FROM chess_games JOIN game_data ON chess_games.game_id = game_data.game_id JOIN users ON users.username = chess_games.username WHERE users.username = ?";
+    const { username } = req.body;
+    const sql = "SELECT game_data.game, chess_games.game_date, chess_games.winner FROM chess_games JOIN game_data ON chess_games.game_id = game_data.game_id JOIN users ON users.username = chess_games.username WHERE users.username = ? ORDER BY chess_games.game_date DESC";
 
-        db.query(sql, [username], (err, result) => {
-            if (err) {
-                console.error('Error fetching games:', err);
-                return res.status(500).json({ error: 'Internal server error' });
-            }
+    db.query(sql, [username], (err, result) => {
+        if (err) {
+            console.error('Error fetching games:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
 
-            return res.json({ games: result });
-        });
-    } catch (error) {
-        console.error('Error fetching games:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
+        return res.json({ games: result });
+    });
 });
 
 app.get('/', verifyUser, (req, res) => {

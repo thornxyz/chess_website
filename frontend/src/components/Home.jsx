@@ -25,7 +25,7 @@ function Home() {
   const handleLogout = () => {
     axios
       .get(`${import.meta.env.VITE_API_URL}logout`)
-      .then(() => {
+      .then((res) => {
         location.reload(true);
       })
       .catch((err) => console.log(err));
@@ -36,7 +36,9 @@ function Home() {
       {auth ? (
         <div>
           <div className="flex bg-slate-800 justify-between w-full pl-2 pr-2 pt-2 pb-1 items-center relative top-0">
-            <div className="text-white font-medium text-lg">Hello {username} </div>
+            <div className="text-white font-medium text-lg">
+              Hello {username}{" "}
+            </div>
             <div>
               <Link
                 to={`/account/${username}`}
@@ -52,13 +54,18 @@ function Home() {
               </button>
             </div>
           </div>
-          <Game username={username}/>
+          <Game username={username} />
         </div>
       ) : (
         <div>
           <div className="flex items-center w-full justify-center flex-col h-screen bg-slate-500">
-            <h1 className="font-medium text-white text-4xl mb-16 text-center ">Login to continue</h1>
-            <Link to="/login" className="bg-green-500 text-white px-6 py-3 font-medium text-3xl rounded-md hover:bg-green-800">
+            <h1 className="font-medium text-white text-4xl mb-16 text-center ">
+              Login to continue
+            </h1>
+            <Link
+              to="/login"
+              className="bg-green-500 text-white px-6 py-3 font-medium text-3xl rounded-md hover:bg-green-800"
+            >
               Login
             </Link>
           </div>
@@ -69,4 +76,3 @@ function Home() {
 }
 
 export default Home;
-

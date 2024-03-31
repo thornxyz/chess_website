@@ -34,9 +34,23 @@ const db = mysql2.createConnection({
 });
 
 db.connect(function (err) {
-    if (err) throw err;
-    console.log("Connected!");
+    if (err) {
+        console.error("Error connecting to database:", err);
+    } else {
+        console.log("Connected to database!");
+    }
 });
+
+setInterval(() => {
+    db.query('SELECT 1', (err, result) => {
+        if (err) {
+            console.error('Error keeping connection alive:', err);
+        } else {
+            console.log('Connection kept alive');
+        }
+    });
+}, 60000); // Execute every minute
+
 
 app.post('/register', (req, res) => {
     if (!req.body.username || !req.body.password) {
@@ -76,7 +90,11 @@ app.post('/login', (req, res) => {
                 if (response) {
                     const username = data[0].username;
                     const token = jwt.sign({ username }, jwtsecret, { expiresIn: '1d' });
-                    res.cookie("token", token);
+                    res.cookie("token", token, {
+                        httpOnly: true,
+                        secure: true,
+                        sameSite: 'none'
+                    });
                     return res.json({ Status: "Success" });
 
                 } else {
@@ -167,9 +185,13 @@ app.get('/', verifyUser, (req, res) => {
 })
 
 app.get('/logout', (req, res) => {
-    res.clearCookie("token");
+    res.clearCookie("token", {
+        secure: true,
+        sameSite: 'none',
+        httpOnly: true
+    });
     return res.json({ Status: "Success", message: "Logged out" });
-})
+});
 
 
 app.listen(port, () => {

@@ -11,17 +11,20 @@ function GameOverModal({ winner, username, game }) {
   const [buttonClicked, setButtonClicked] = useState(false);
 
   const handleOkClick = async () => {
-    if(buttonClicked) return;
+    if (buttonClicked) return;
     setButtonClicked(true);
-    
-    const currentDate = new Date().toISOString();
 
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}addChessGame`, {
-        username: username,
-        game_date: currentDate,
-        winner: winner,
-      });
+      const currentDate = new Date().toISOString();
+
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}addChessGame`,
+        {
+          username: username,
+          game_date: currentDate,
+          winner: winner,
+        }
+      );
 
       const gameid = response.data.gameId;
 
@@ -29,7 +32,7 @@ function GameOverModal({ winner, username, game }) {
         gameId: gameid,
         gameData: game,
       });
-      
+
       console.log(game);
       setModalVisible(false);
     } catch (error) {
@@ -42,10 +45,15 @@ function GameOverModal({ winner, username, game }) {
   }
 
   return (
-    <div className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 ${boxStyles.base}`}>
+    <div
+      className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 ${boxStyles.base}`}
+    >
       <p className="mb-4 text-2xl font-bold">Game Over!</p>
       <p className="mb-4">Winner: {winner}</p>
-      <button className="px-4 py-2 bg-lime-500 text-black rounded hover:bg-lime-600 hover:text-white" onClick={handleOkClick}>
+      <button
+        className="px-4 py-2 bg-lime-500 text-black rounded hover:bg-lime-600 hover:text-white"
+        onClick={handleOkClick}
+      >
         Ok
       </button>
     </div>
@@ -55,7 +63,7 @@ function GameOverModal({ winner, username, game }) {
 GameOverModal.propTypes = {
   winner: PropTypes.string.isRequired,
   username: PropTypes.string.isRequired,
-  game: PropTypes.string.isRequired
+  game: PropTypes.string.isRequired,
 };
 
 export default GameOverModal;

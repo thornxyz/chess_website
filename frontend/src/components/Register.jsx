@@ -8,18 +8,24 @@ function Register() {
     password: "",
   });
 
+  const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    axios
-      .post(`${import.meta.env.VITE_API_URL}register`, values)
-      .then((res) => {
-        if (res.data.Status === "Success") {
-          navigate("/login");
-        }
-      })
-      .then((err) => console.log(err));
+    if (!loading) {
+      setLoading(true);
+      axios
+        .post(`${import.meta.env.VITE_API_URL}register`, values)
+        .then((res) => {
+          if (res.data.Status === "Success") {
+            navigate("/login");
+          }
+        })
+        .then((err) => console.log(err))
+        .finally(() => setLoading(false));
+    }
   };
 
   return (
@@ -48,8 +54,9 @@ function Register() {
           <button
             type="submit"
             className="bg-blue-500 my-2 rounded-md w-full py-2 text-white font-medium text-lg hover:bg-blue-700"
+            disabled={loading}
           >
-            Create Account
+            {loading ? "Creating Account..." : "Create Account"}
           </button>
           <Link
             to="/login"

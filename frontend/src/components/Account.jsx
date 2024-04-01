@@ -3,6 +3,14 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
+function isnotEmpty(obj) {
+  const regex = /\[\]/;
+  if (regex.test(JSON.stringify(obj))) {
+    return false;
+  }
+  return true;
+}
+
 function Account() {
   const { username } = useParams();
   const [games, setGames] = useState([]);
@@ -42,33 +50,37 @@ function Account() {
         </Link>
         <div className="font-medium pt-1">Welcome, {username}</div>
       </div>
-      <div className="overflow-x-auto mt-4">
-        <table className="table-auto w-full border-collapse">
-          <thead>
-            <tr>
-              <th className="px-4 py-2 border">Date</th>
-              <th className="px-4 py-2 border">Winner</th>
-              <th className="px-4 py-2 border">Game</th>
-            </tr>
-          </thead>
-          <tbody>
-            {games.games.map((game, index) => (
-              <tr key={index}>
-                <td className="border px-4 py-2 w-1/6">
-                  {new Date(
-                    new Date(game.game_date).getTime() -
-                      new Date(game.game_date).getTimezoneOffset() * 60000
-                  ).toLocaleString()}
-                </td>
-                <td className="border px-4 py-2 w-1/12">{game.winner}</td>
-                <td className="border px-4 py-2 break-all">
-                  <div>{game.game}</div>
-                </td>
+      {isnotEmpty(games) ? (
+        <div className="overflow-x-auto mt-4">
+          <table className="table-auto w-full border-collapse">
+            <thead>
+              <tr>
+                <th className="px-4 py-2 border">Date</th>
+                <th className="px-4 py-2 border">Winner</th>
+                <th className="px-4 py-2 border">Game</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {games.games.map((game, index) => (
+                <tr key={index}>
+                  <td className="border px-4 py-2 w-1/6">
+                    {new Date(
+                      new Date(game.game_date).getTime() -
+                        new Date(game.game_date).getTimezoneOffset() * 60000
+                    ).toLocaleString()}
+                  </td>
+                  <td className="border px-4 py-2 w-1/12">{game.winner}</td>
+                  <td className="border px-4 py-2 break-all">
+                    <div>{game.game}</div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="text-center py-32 font-medium text-2xl">No games played yet</div>
+      )}
     </div>
   );
 }

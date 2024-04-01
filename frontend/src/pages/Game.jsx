@@ -5,6 +5,7 @@ import GameOverModal from "../components/GameOverModal.jsx";
 import { Chessboard } from "react-chessboard";
 import PropTypes from "prop-types";
 import "./Game.css";
+import PieceImage from "../components/PieceImg.jsx";
 
 function Game(props) {
   const levels = {
@@ -59,9 +60,9 @@ function Game(props) {
 
   useEffect(() => {
     function handleResize() {
-      const isSmallScreen = window.innerWidth <= 576;
+      const isSmallScreen = window.innerWidth <= 500;
       setBoardWrapperStyle({
-        width: isSmallScreen ? "92vw" : "70vw",
+        width: isSmallScreen ? "95vw" : "70vw",
         maxWidth: isSmallScreen ? "93vh" : "70vh",
       });
     }
@@ -337,19 +338,19 @@ function Game(props) {
 
   useEffect(() => {
     const element = capturesRef.current;
-    if(element) {
+    if (element) {
       element.scrollTop = element.scrollHeight;
     }
   }, [captures]);
 
   const movesRef = useRef(null);
 
-  useEffect(()=> {
+  useEffect(() => {
     const element = movesRef.current;
-    if(element) {
+    if (element) {
       element.scrollTop = element.scrollHeight;
     }
-  }, [moves])
+  }, [moves]);
 
   return (
     <div className="flex overflow-auto justify-center h-screen bg-slate-800">
@@ -373,15 +374,21 @@ function Game(props) {
         <div className="w-full flex justify-center items-center" id="boardArea">
           <div
             className="bg-gray-600 text-white overflow-y-auto scroll-smooth rounded-md flex-col"
-            id="captureArea" ref={capturesRef}
+            id="captureArea"
+            ref={capturesRef}
           >
             <h2 className="font-bold mb-2 text-center">Captures:</h2>
             <div id="capul" className="flex justify-center">
               <ul className="text-left text-sm font-medium" id="capLog">
                 {captures.map((capture, index) => (
                   <li key={index}>
-                    {index + 1 + ". "}
-                    {capture}
+                    <div className="flex">
+                      {index + 1 + ". "}
+                      <span>
+                        <PieceImage piece={capture.split(" ")[0]} />
+                      </span>
+                      <span>{capture.substring(capture.indexOf(" ") + 1)}</span>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -420,7 +427,8 @@ function Game(props) {
 
           <div
             className="overflow-auto ml-6 px-4 py-1 bg-gray-900 flex-col rounded-md"
-            id="movesArea" ref={movesRef}
+            id="movesArea"
+            ref={movesRef}
           >
             <h2 className="text-white font-bold mb-2 text-center">Moves:</h2>
             <div id="moveul">

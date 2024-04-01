@@ -4,11 +4,12 @@ import { useState } from "react";
 import axios from "axios";
 
 function Login() {
-
   const [values, setValues] = useState({
     username: "",
     password: "",
   });
+
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -16,24 +17,26 @@ function Login() {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    axios
-      .post(`${import.meta.env.VITE_API_URL}login`, values)
-      .then((res) => {
-        if (res.data.Status === "Success") {
-          navigate("/");
-        } else {
-          alert(res.data.Error);
-        }
-      })
-      .then((err) => console.log(err));
+    if (!loading) {
+      setLoading(true);
+      axios
+        .post(`${import.meta.env.VITE_API_URL}login`, values)
+        .then((res) => {
+          if (res.data.Status === "Success") {
+            navigate("/");
+          } else {
+            alert(res.data.Error);
+          }
+        })
+        .then((err) => console.log(err))
+        .finally(() => setLoading(false));
+    }
   };
 
   return (
     <div className="flex justify-center items-center h-screen bg-slate-400">
       <div className="bg-zinc-600 p-6 rounded-lg w-full max-w-sm m-4 flex flex-col items-center">
-        <div className="font-semibold text-white py-1 mb-4 text-3xl">
-          Login
-        </div>
+        <div className="font-semibold text-white py-1 mb-4 text-3xl">Login</div>
         <form onSubmit={handleSubmit} className="w-full">
           <div className="text-white w-full font-medium text-xl">Username</div>
           <input
@@ -54,8 +57,9 @@ function Login() {
           <button
             type="submit"
             className="bg-blue-500 my-2 rounded-md w-full py-2 text-white font-medium text-lg hover:bg-blue-700"
+            disabled={loading}
           >
-            Login
+            {loading ? "Logging in..." : "Login"}
           </button>
           <Link
             to="/register"

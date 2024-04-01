@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { Chess } from "chess.js";
 import Engine from "../engine.ts";
 import GameOverModal from "../components/GameOverModal.jsx";
@@ -120,6 +120,7 @@ function Game(props) {
   }
 
   function onSquareClick(square) {
+    setSource("click");
     setRightClickedSquares({});
 
     if (!moveFrom) {
@@ -189,7 +190,9 @@ function Game(props) {
     }
   }
 
-  function onPromotionPieceSelect(piece) {
+  const [source, setSource] = useState(null);
+
+  function clickPromotion(piece) {
     if (piece) {
       const move = game.move({
         from: moveFrom,
@@ -209,6 +212,18 @@ function Game(props) {
     setOptionSquares({});
     setTimeout(findBestMove, 300);
     return true;
+  }
+
+  function dragPromotion() {
+    return true;
+  }
+
+  function onPromotionPieceSelect(piece) {
+    if (source === "click") {
+      clickPromotion(piece);
+    } else if (source === "drag") {
+      dragPromotion();
+    }
   }
 
   function findBestMove() {
@@ -241,20 +256,12 @@ function Game(props) {
   }
 
   function onDrop(sourceSquare, targetSquare, piece) {
+    setSource("drag");
     const move = game.move({
       from: sourceSquare,
       to: targetSquare,
       promotion: piece[1].toLowerCase() ?? "q",
     });
-
-    // if (
-    //   move &&
-    //   ((move.color === "w" && move.piece === "p" && targetSquare[1] === "8") ||
-    //     (move.color === "b" && move.piece === "p" && targetSquare[1] === "1"))
-    // ) {
-    //   setShowPromotionDialog(true);
-    //   return;
-    // }
 
     setGamePosition(game.fen());
 
@@ -326,6 +333,24 @@ function Game(props) {
     }
   }
 
+  const capturesRef = useRef(null);
+
+  useEffect(() => {
+    const element = capturesRef.current;
+    if(element) {
+      element.scrollTop = element.scrollHeight;
+    }
+  }, [captures]);
+
+  const movesRef = useRef(null);
+
+  useEffect(()=> {
+    const element = movesRef.current;
+    if(element) {
+      element.scrollTop = element.scrollHeight;
+    }
+  }, [moves])
+
   return (
     <div className="flex overflow-auto justify-center h-screen bg-slate-800">
       <div className="p-2 overflow-auto max-w-screen-lg w-full">
@@ -347,8 +372,8 @@ function Game(props) {
 
         <div className="w-full flex justify-center items-center" id="boardArea">
           <div
-            className="bg-gray-600 text-white overflow-auto rounded-md flex-col"
-            id="captureArea"
+            className="bg-gray-600 text-white overflow-y-auto scroll-smooth rounded-md flex-col"
+            id="captureArea" ref={capturesRef}
           >
             <h2 className="font-bold mb-2 text-center">Captures:</h2>
             <div id="capul" className="flex justify-center">
@@ -395,7 +420,7 @@ function Game(props) {
 
           <div
             className="overflow-auto ml-6 px-4 py-1 bg-gray-900 flex-col rounded-md"
-            id="movesArea"
+            id="movesArea" ref={movesRef}
           >
             <h2 className="text-white font-bold mb-2 text-center">Moves:</h2>
             <div id="moveul">
@@ -406,7 +431,9 @@ function Game(props) {
                     className="font-medium text-sm text-left"
                     id="moveElement"
                   >
-                    <span className="font-thin">{index % 2 === 0 ? index / 2 + 1 + ". " : ""}</span>
+                    <span className="font-thin">
+                      {index % 2 === 0 ? index / 2 + 1 + ". " : ""}
+                    </span>
                     {move}
                   </li>
                 ))}

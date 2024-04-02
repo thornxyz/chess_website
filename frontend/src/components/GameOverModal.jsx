@@ -6,7 +6,11 @@ const boxStyles = {
   base: "border-2 border-solid border-white border-opacity-25 rounded-xl font-bold m-2 p-3 hover:bg-opacity-80 bg-slate-900 bg-opacity-80 shadow-box h-35 w-60 text-white text-center",
 };
 
-function GameOverModal({ winner, username, game }) {
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+function GameOverModal({ winner, username, game, player_colour }) {
   const [modalVisible, setModalVisible] = useState(true);
   const [buttonClicked, setButtonClicked] = useState(false);
 
@@ -23,6 +27,7 @@ function GameOverModal({ winner, username, game }) {
           username: username,
           game_date: currentDate,
           winner: winner,
+          player_colour: capitalizeFirstLetter(player_colour)
         }
       );
 
@@ -64,6 +69,7 @@ GameOverModal.propTypes = {
   winner: PropTypes.string.isRequired,
   username: PropTypes.string.isRequired,
   game: PropTypes.string.isRequired,
+  player_colour: PropTypes.string.isRequired
 };
 
 export default GameOverModal;

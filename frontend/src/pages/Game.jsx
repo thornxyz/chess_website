@@ -38,6 +38,9 @@ function Game(props) {
   const [captures, setCaptures] = useState([]);
   const [allCaptures, setAllCaptures] = useState([]);
 
+  const [blackCaptures, setBlackCaptures] = useState([]);
+  const [whiteCaptures, setWhiteCaptures] = useState([]);
+
   useEffect(() => {
     const currentMoves = game
       .history({ verbose: true })
@@ -78,6 +81,21 @@ function Game(props) {
     setCaptures((prevCaptures) => [...prevCaptures, capture]);
     setAllCaptures((prevCaptures) => [...prevCaptures, capture]);
   }
+
+  function getWhiteCaptures(capture) {
+    setWhiteCaptures((prevCaptures) => [...prevCaptures, capture]);
+  }
+  function getBlackCaptures(capture) {
+    setBlackCaptures((prevCaptures) => [...prevCaptures, capture]);
+  }
+
+  useEffect(() => {
+    console.log("white captures:", whiteCaptures);
+  }, [whiteCaptures]);
+
+  useEffect(() => {
+    console.log("black captures:", blackCaptures);
+  }, [blackCaptures]);
 
   function onSquareRightClick(square) {
     const colour = "rgba(0, 0, 255, 0.4)";
@@ -166,9 +184,12 @@ function Game(props) {
 
       const capturedPiece = move.captured;
       if (capturedPiece) {
-        const color = Piece === "white" ? "b" : "w";
+        const color = game.turn();
         const capture = `${color + capturedPiece.toUpperCase()} at ${move.to}`;
         console.log(capture);
+        color === "w"
+          ? getBlackCaptures(capture.split(" ")[0])
+          : getWhiteCaptures(capture.split(" ")[0]);
         getCaptures(capture);
       }
 
@@ -244,12 +265,14 @@ function Game(props) {
 
           const capturedPiece = move.captured;
           if (capturedPiece) {
-            const color = Piece === "white" ? "w" : "b";
+            const color = game.turn();
             const capture = `${color + capturedPiece.toUpperCase()} at ${
               move.to
             }`;
-            console.log(capture);
             getCaptures(capture);
+            color === "w"
+              ? getBlackCaptures(capture.split(" ")[0])
+              : getWhiteCaptures(capture.split(" ")[0]);
           }
         }
       }
@@ -273,10 +296,13 @@ function Game(props) {
 
     const capturedPiece = move.captured;
     if (capturedPiece) {
-      const color = Piece === "white" ? "b" : "w";
+      const color = game.turn();
       const capture = `${color + capturedPiece.toUpperCase()} at ${move.to}`;
       console.log(capture);
       getCaptures(capture);
+      color === "w"
+        ? getBlackCaptures(capture.split(" ")[0])
+        : getWhiteCaptures(capture.split(" ")[0]);
     }
 
     checkGameOver();
@@ -298,6 +324,8 @@ function Game(props) {
     setWinner(null);
     game.reset();
     setCaptures([]);
+    setWhiteCaptures([]);
+    setBlackCaptures([]);
     setAllCaptures([]);
     setMoves([]);
     const selectedPiece = Piece || "white";
@@ -317,6 +345,9 @@ function Game(props) {
         setCaptures((prevCaptures) =>
           prevCaptures.filter((capture) => capture !== lastCapture)
         );
+        const lastColor =
+          lastCapture[0] === "w" ? blackCaptures : whiteCaptures;
+        lastColor.pop();
       }
       const playerMove = game.undo();
       if (playerMove && playerMove.captured) {
@@ -324,6 +355,9 @@ function Game(props) {
         setCaptures((prevCaptures) =>
           prevCaptures.filter((capture) => capture !== lastCapture)
         );
+        const lastColor =
+          lastCapture[0] === "w" ? blackCaptures : whiteCaptures;
+        lastColor.pop();
       }
       setGamePosition(game.fen());
       setMoveSquares({});
@@ -355,7 +389,7 @@ function Game(props) {
   return (
     <div className="flex overflow-auto justify-center h-screen bg-slate-800">
       <div className="p-2 overflow-auto max-w-screen-lg w-full">
-        <div className="flex justify-center mb-1 mt-2">
+        <div className="flex justify-center mb-1 mt-1">
           {Object.entries(levels).map(([level, depth]) => (
             <button
               className="px-4 py-1 text-black rounded m-1"
@@ -395,34 +429,70 @@ function Game(props) {
             </div>
           </div>
 
-          <div style={boardWrapperStyle}>
-            <Chessboard
-              id="Chessboard"
-              animationDuration={200}
-              position={gamePosition}
-              onPieceDragEnd={(piece, sourceSquare) => {
-                getMoveOptions(null);
-              }}
-              onPieceDragBegin={(piece, sourceSquare) => {
-                getMoveOptions(sourceSquare);
-              }}
-              onSquareClick={onSquareClick}
-              onSquareRightClick={onSquareRightClick}
-              onPieceDrop={onDrop}
-              boardOrientation={Piece === "black" ? "black" : "white"}
-              promotionToSquare={moveTo}
-              showPromotionDialog={showPromotionDialog}
-              onPromotionPieceSelect={onPromotionPieceSelect}
-              customSquareStyles={{
-                ...moveSquares,
-                ...optionSquares,
-                ...rightClickedSquares,
-              }}
-              customBoardStyle={{
-                borderRadius: "4px",
-                boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)",
-              }}
-            />
+          <div className="flex-col">
+
+            <div>
+            <ul className="flex items-center bg-gray-600 rounded-sm mb-1" style={{ height: "24px" }}>
+                {Piece === "white"
+                  ? blackCaptures.map((capture, index) => (
+                      <li key={index}>
+                        <PieceImage piece={capture} />
+                      </li>
+                    ))
+                  : whiteCaptures.map((capture, index) => (
+                      <li key={index}>
+                        <PieceImage piece={capture} />
+                      </li>
+                    ))}
+              </ul>
+            </div>
+
+            <div style={boardWrapperStyle}>
+              <Chessboard
+                id="Chessboard"
+                animationDuration={200}
+                position={gamePosition}
+                onPieceDragEnd={(piece, sourceSquare) => {
+                  getMoveOptions(null);
+                }}
+                onPieceDragBegin={(piece, sourceSquare) => {
+                  getMoveOptions(sourceSquare);
+                }}
+                onSquareClick={onSquareClick}
+                onSquareRightClick={onSquareRightClick}
+                onPieceDrop={onDrop}
+                boardOrientation={Piece === "black" ? "black" : "white"}
+                promotionToSquare={moveTo}
+                showPromotionDialog={showPromotionDialog}
+                onPromotionPieceSelect={onPromotionPieceSelect}
+                customSquareStyles={{
+                  ...moveSquares,
+                  ...optionSquares,
+                  ...rightClickedSquares,
+                }}
+                customBoardStyle={{
+                  borderRadius: "4px",
+                  boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)",
+                }}
+              />
+            </div>
+
+            <div>
+            <ul className="flex items-center bg-gray-600 rounded-sm mt-1" style={{ height: "24px" }}>
+                {Piece === "white"
+                  ? whiteCaptures.map((capture, index) => (
+                      <li key={index}>
+                        <PieceImage piece={capture} />
+                      </li>
+                    ))
+                  : blackCaptures.map((capture, index) => (
+                      <li key={index}>
+                        <PieceImage piece={capture} />
+                      </li>
+                    ))}
+              </ul>
+            </div>
+
           </div>
 
           <div
@@ -455,6 +525,7 @@ function Game(props) {
             winner={winner}
             username={props.username}
             game={moves.toString()}
+            player_colour={Piece}
           />
         )}
 

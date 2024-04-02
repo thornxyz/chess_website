@@ -108,14 +108,14 @@ app.post('/login', (req, res) => {
 })
 
 app.post('/addChessGame', (req, res) => {
-    const { username, game_date, winner } = req.body;
+    const { username, game_date, winner, player_colour } = req.body;
 
     if (!username || !game_date || !winner) {
         return res.status(400).json({ error: "Username, game date, or winner missing" });
     }
 
-    const sql = "INSERT INTO chess_games (username, game_date, winner) VALUES (?, ?, ?)";
-    db.query(sql, [username, game_date, winner], (err, result) => {
+    const sql = "INSERT INTO chess_games (username, game_date, winner, player_colour) VALUES (?, ?, ?, ?)";
+    db.query(sql, [username, game_date, winner, player_colour], (err, result) => {
         if (err) {
             console.error("Error inserting into chess_games table:", err);
             return res.status(500).json({ error: "Error inserting data" });
@@ -163,7 +163,7 @@ const verifyUser = (req, res, next) => {
 
 app.post('/getAllGames', async (req, res) => {
     const { username } = req.body;
-    const sql = "SELECT game_data.game, chess_games.game_date, chess_games.winner FROM chess_games JOIN game_data ON chess_games.game_id = game_data.game_id JOIN users ON users.username = chess_games.username WHERE users.username = ? ORDER BY chess_games.game_date DESC";
+    const sql = "SELECT game_data.game, chess_games.game_date, chess_games.winner, chess_games.player_colour FROM chess_games JOIN game_data ON chess_games.game_id = game_data.game_id JOIN users ON users.username = chess_games.username WHERE users.username = ? ORDER BY chess_games.game_date DESC";
 
     db.query(sql, [username], (err, result) => {
         if (err) {

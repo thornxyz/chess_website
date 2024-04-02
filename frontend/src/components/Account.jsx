@@ -11,6 +11,12 @@ function isnotEmpty(obj) {
   return true;
 }
 
+function getTime(date) {
+  return new Date(
+    new Date(date).getTime() - new Date(date).getTimezoneOffset() * 60000
+  ).toLocaleString();
+}
+
 function Account() {
   const { username } = useParams();
   const [games, setGames] = useState([]);
@@ -57,6 +63,7 @@ function Account() {
               <tr>
                 <th className="px-4 py-2 border">Date</th>
                 <th className="px-4 py-2 border">Winner</th>
+                <th className="px-4 py-2 border">Player</th>
                 <th className="px-4 py-2 border">Game</th>
               </tr>
             </thead>
@@ -64,12 +71,12 @@ function Account() {
               {games.games.map((game, index) => (
                 <tr key={index}>
                   <td className="border px-4 py-2 w-1/6">
-                    {new Date(
-                      new Date(game.game_date).getTime() -
-                        new Date(game.game_date).getTimezoneOffset() * 60000
-                    ).toLocaleString()}
+                    {getTime(game.game_date)}
                   </td>
                   <td className="border px-4 py-2 w-1/12">{game.winner}</td>
+                  <td className="border px-4 py-2 w-1/12">
+                    {game.player_colour}
+                  </td>
                   <td className="border px-4 py-2 break-all">
                     <div>{game.game}</div>
                   </td>
@@ -79,7 +86,9 @@ function Account() {
           </table>
         </div>
       ) : (
-        <div className="text-center py-32 font-medium text-2xl">No games played yet</div>
+        <div className="text-center py-32 font-medium text-2xl">
+          No games played yet
+        </div>
       )}
     </div>
   );

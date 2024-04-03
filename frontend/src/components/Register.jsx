@@ -9,6 +9,7 @@ function Register() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const navigate = useNavigate();
 
@@ -23,7 +24,20 @@ function Register() {
             navigate("/login");
           }
         })
-        .then((err) => console.log(err))
+        .catch((err) => {
+          if (err.response && err.response.data && err.response.data.error) {
+            const { errno, sqlMessage } = err.response.data.error;
+            if (errno === 1062 && sqlMessage.includes("Duplicate entry")) {
+              setError(
+                "Username already exists."
+              );
+            } else {
+              setError("An error occurred.");
+            }
+          } else {
+            setError("An error occurred. Please try again.");
+          }
+        })
         .finally(() => setLoading(false));
     }
   };
@@ -35,6 +49,7 @@ function Register() {
           Register
         </div>
         <form onSubmit={handleSubmit} className="w-full">
+          {error && <div className="text-red-500 mb-4">{error}</div>}
           <div className="text-white w-full font-medium text-xl">Username</div>
           <input
             type="text"

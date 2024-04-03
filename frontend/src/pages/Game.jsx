@@ -41,6 +41,8 @@ function Game(props) {
   const [blackCaptures, setBlackCaptures] = useState([]);
   const [whiteCaptures, setWhiteCaptures] = useState([]);
 
+  const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
     const currentMoves = game
       .history({ verbose: true })
@@ -139,76 +141,81 @@ function Game(props) {
   }
 
   function onSquareClick(square) {
-    setSource("click");
-    setRightClickedSquares({});
+    if (Piece[0].toLocaleLowerCase() === game.turn()) {
+      setSource("click");
+      setRightClickedSquares({});
 
-    if (!moveFrom) {
-      const hasMoveOptions = getMoveOptions(square);
-      if (hasMoveOptions) setMoveFrom(square);
-      return;
-    }
-
-    if (!moveTo) {
-      const moves = game.moves({
-        moveFrom,
-        verbose: true,
-      });
-      const foundMove = moves.find(
-        (m) => m.from === moveFrom && m.to === square
-      );
-      if (!foundMove) {
-        const hasMoveOptions = getMoveOptions(square);
-        setMoveFrom(hasMoveOptions ? square : "");
-        return;
-      }
-
-      setMoveTo(square);
-
-      if (
-        (foundMove.color === "w" &&
-          foundMove.piece === "p" &&
-          square[1] === "8") ||
-        (foundMove.color === "b" &&
-          foundMove.piece === "p" &&
-          square[1] === "1")
-      ) {
-        setShowPromotionDialog(true);
-        return;
-      }
-
-      const move = game.move({
-        from: moveFrom,
-        to: square,
-        promotion: "q",
-      });
-
-      const capturedPiece = move.captured;
-      if (capturedPiece) {
-        const color = game.turn();
-        const capture = `${color + capturedPiece.toUpperCase()} at ${move.to}`;
-        console.log(capture);
-        color === "w"
-          ? getBlackCaptures(capture.split(" ")[0])
-          : getWhiteCaptures(capture.split(" ")[0]);
-        getCaptures(capture);
-      }
-
-      if (move === null) {
+      if (!moveFrom) {
         const hasMoveOptions = getMoveOptions(square);
         if (hasMoveOptions) setMoveFrom(square);
         return;
       }
 
-      if (move) {
-        setGamePosition(game.fen());
-        setTimeout(findBestMove, 300);
-        checkGameOver();
-      }
+      if (!moveTo) {
+        const moves = game.moves({
+          moveFrom,
+          verbose: true,
+        });
+        const foundMove = moves.find(
+          (m) => m.from === moveFrom && m.to === square
+        );
+        if (!foundMove) {
+          const hasMoveOptions = getMoveOptions(square);
+          setMoveFrom(hasMoveOptions ? square : "");
+          return;
+        }
 
-      setMoveFrom("");
-      setMoveTo(null);
-      setOptionSquares({});
-      return;
+        setMoveTo(square);
+
+        if (
+          (foundMove.color === "w" &&
+            foundMove.piece === "p" &&
+            square[1] === "8") ||
+          (foundMove.color === "b" &&
+            foundMove.piece === "p" &&
+            square[1] === "1")
+        ) {
+          setShowPromotionDialog(true);
+          return;
+        }
+
+        const move = game.move({
+          from: moveFrom,
+          to: square,
+          promotion: "q",
+        });
+
+        const capturedPiece = move.captured;
+        if (capturedPiece) {
+          const color = game.turn();
+          const capture = `${color + capturedPiece.toUpperCase()} at ${
+            move.to
+          }`;
+          console.log(capture);
+          color === "w"
+            ? getBlackCaptures(capture.split(" ")[0])
+            : getWhiteCaptures(capture.split(" ")[0]);
+          getCaptures(capture);
+        }
+
+        if (move === null) {
+          const hasMoveOptions = getMoveOptions(square);
+          if (hasMoveOptions) setMoveFrom(square);
+          return;
+        }
+
+        if (move) {
+          setGamePosition(game.fen());
+          setIsLoading(true);
+          stockfishLevel === 1 ? setTimeout(findBestMove, 300) : findBestMove();
+          checkGameOver();
+        }
+
+        setMoveFrom("");
+        setMoveTo(null);
+        setOptionSquares({});
+        return;
+      }
     }
   }
 
@@ -260,6 +267,8 @@ function Game(props) {
 
         setGamePosition(game.fen());
 
+        setIsLoading(false);
+
         if (move) {
           checkGameOver();
 
@@ -280,34 +289,37 @@ function Game(props) {
   }
 
   function onDrop(sourceSquare, targetSquare, piece) {
-    setSource("drag");
-    const move = game.move({
-      from: sourceSquare,
-      to: targetSquare,
-      promotion: piece[1].toLowerCase() ?? "q",
-    });
+    if (Piece[0].toLowerCase() === game.turn()) {
+      setSource("drag");
+      const move = game.move({
+        from: sourceSquare,
+        to: targetSquare,
+        promotion: piece[1].toLowerCase() ?? "q",
+      });
 
-    setGamePosition(game.fen());
+      setGamePosition(game.fen());
 
-    if (!move) {
-      console.log("Invalid move");
-      return false;
+      if (!move) {
+        console.log("Invalid move");
+        return false;
+      }
+
+      const capturedPiece = move.captured;
+      if (capturedPiece) {
+        const color = game.turn();
+        const capture = `${color + capturedPiece.toUpperCase()} at ${move.to}`;
+        console.log(capture);
+        getCaptures(capture);
+        color === "w"
+          ? getBlackCaptures(capture.split(" ")[0])
+          : getWhiteCaptures(capture.split(" ")[0]);
+      }
+
+      checkGameOver();
+      setIsLoading(true);
+      stockfishLevel === 1 ? setTimeout(findBestMove, 300) : findBestMove();
+      return true;
     }
-
-    const capturedPiece = move.captured;
-    if (capturedPiece) {
-      const color = game.turn();
-      const capture = `${color + capturedPiece.toUpperCase()} at ${move.to}`;
-      console.log(capture);
-      getCaptures(capture);
-      color === "w"
-        ? getBlackCaptures(capture.split(" ")[0])
-        : getWhiteCaptures(capture.split(" ")[0]);
-    }
-
-    checkGameOver();
-    setTimeout(findBestMove, 300);
-    return true;
   }
 
   function checkGameOver() {
@@ -320,6 +332,7 @@ function Game(props) {
   }
 
   function handleNewGame() {
+    setIsLoading(false);
     setIsGameOver(false);
     setWinner(null);
     game.reset();
@@ -389,7 +402,7 @@ function Game(props) {
   return (
     <div className="flex overflow-auto justify-center h-screen bg-slate-800">
       <div className="p-2 overflow-auto max-w-screen-lg w-full">
-        <div className="flex justify-center mb-1 mt-1">
+        <div className="flex justify-center mt-1">
           {Object.entries(levels).map(([level, depth]) => (
             <button
               className="px-4 py-1 text-black rounded m-1"
@@ -403,6 +416,14 @@ function Game(props) {
               {level}
             </button>
           ))}
+        </div>
+
+        <div className="h-6">
+          {isLoading && (
+            <div className="text-center text-white text-sm font-medium">
+              Loading...
+            </div>
+          )}
         </div>
 
         <div className="w-full flex justify-center items-center" id="boardArea">
@@ -430,9 +451,11 @@ function Game(props) {
           </div>
 
           <div className="flex-col">
-
             <div>
-            <ul className="flex items-center bg-gray-600 rounded-sm mb-1" style={{ height: "24px" }}>
+              <ul
+                className="flex items-center bg-gray-600 rounded-sm mb-1"
+                style={{ height: "24px" }}
+              >
                 {Piece === "white"
                   ? blackCaptures.map((capture, index) => (
                       <li key={index}>
@@ -478,7 +501,10 @@ function Game(props) {
             </div>
 
             <div>
-            <ul className="flex items-center bg-gray-600 rounded-sm mt-1" style={{ height: "24px" }}>
+              <ul
+                className="flex items-center bg-gray-600 rounded-sm mt-1"
+                style={{ height: "24px" }}
+              >
                 {Piece === "white"
                   ? whiteCaptures.map((capture, index) => (
                       <li key={index}>
@@ -492,7 +518,6 @@ function Game(props) {
                     ))}
               </ul>
             </div>
-
           </div>
 
           <div

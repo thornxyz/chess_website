@@ -12,15 +12,19 @@ function isnotEmpty(obj) {
 }
 
 function getTime(date) {
-  return new Date(
-    new Date(date).getTime() - new Date(date).getTimezoneOffset() * 60000
-  ).toLocaleString();
+  const timestamp = new Date(date).getTime();
+
+  const offsetMilliseconds = 5 * 60 * 60 * 1000 + 30 * 60 * 1000;
+  const adjustedTimestamp = timestamp + offsetMilliseconds;
+
+  return new Date(adjustedTimestamp).toLocaleString();
 }
 
 function Account() {
   const { username } = useParams();
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [doj, setDoj] = useState();
 
   useEffect(() => {
     const fetchGames = async () => {
@@ -41,8 +45,30 @@ function Account() {
     fetchGames();
   }, [username]);
 
+  useEffect(() => {
+    const getDoj = async () => {
+      try {
+        const response = await axios.post(
+          `${import.meta.env.VITE_API_URL}getDoj`,
+          { username }
+        );
+        const dateString = new Date(response.data.doj[0].doj);
+        setDoj(dateString.toLocaleDateString());
+        console.log(doj);
+      } catch (error) {
+        console.error("Error fetching doj:", error);
+        setDoj([]);
+      }
+    };
+    getDoj();
+  }, [username]);
+
   if (loading) {
-    return <div className="h-screen bg-slate-800 text-white">Loading...</div>;
+    return (
+      <div className="h-screen bg-slate-800 text-white text-center py-20">
+        Loading...
+      </div>
+    );
   }
 
   return (
@@ -54,7 +80,10 @@ function Account() {
         >
           Back to Game
         </Link>
-        <div className="font-medium pt-1">Welcome, {username}</div>
+        <div className="font-medium pt-1">
+          Welcome, {username}
+          <div>Joined on: {doj}</div>
+        </div>
       </div>
       {isnotEmpty(games) ? (
         <div className="overflow-x-auto mt-4">

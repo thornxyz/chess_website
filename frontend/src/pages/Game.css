@@ -24,18 +24,6 @@ svg {
         height: 0;
     }
 
-    /* #captureArea {
-        display: flex;
-        align-items: center;
-        width: 100%;
-        margin-left: 1.5rem;
-        margin-right: 1.5rem;
-        height: 50px;
-        margin-bottom: 0.8rem;
-        max-height: 100px;
-        max-width: 400px;
-    } */
-
     #moveLog {
         display: flex;
         align-items: center;
@@ -50,25 +38,10 @@ svg {
         align-items: center;
     }
 
-    /* #capul {
-        width: 80%;
-    } */
-
     #moveLog li{
         flex-basis: 16.6%;
         margin-bottom: 0.1rem;
     }
-
-    /* #capLog {
-        display: flex;
-        flex-wrap: wrap;
-        width: 100%;
-    }
-
-    #capul li {
-        flex-basis: 50%;
-        margin-bottom: 0.1rem;
-    } */
 }
 
 @media only screen and (min-width: 700px) {

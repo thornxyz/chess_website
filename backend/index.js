@@ -71,7 +71,7 @@ app.post('/register', (req, res) => {
         db.query(sql, [username, hash, doj], (err, result) => {
             if (err) {
                 console.error("Error inserting into database:", err);
-                return res.status(500).json({ error: "Error inserting into database" });
+                return res.status(500).json({ error: err });
             }
 
             return res.json({ Status: "Success" });
@@ -187,6 +187,20 @@ app.get('/logout', (req, res) => {
     });
     return res.json({ Status: "Success", message: "Logged out" });
 });
+
+app.post('/getDoj', (req, res) => {
+    const { username } = req.body;
+    const sql = "select doj from users where username = ?;";
+
+    db.query(sql, [username], (err, result) => {
+        if (err) {
+            console.error('Error fetching doj:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+
+        return res.json({ doj: result });
+    });
+})
 
 
 app.listen(port, () => {

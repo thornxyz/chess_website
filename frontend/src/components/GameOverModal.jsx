@@ -19,7 +19,8 @@ function GameOverModal({ winner, username, game, player_colour }) {
     setButtonClicked(true);
 
     try {
-      const currentDate = new Date().toISOString();
+      const currentDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
+      // const currentDate = new Date().toISOString();
 
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}addChessGame`,

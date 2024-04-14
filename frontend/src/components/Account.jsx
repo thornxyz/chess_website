@@ -87,7 +87,7 @@ function Account() {
       </div>
       {isnotEmpty(games) ? (
         <div className="overflow-x-auto mt-4">
-          <table className="table-auto w-full border-collapse">
+          <table className="table-auto w-full border-collapse bg-gray-600">
             <thead>
               <tr>
                 <th className="px-4 py-2 border">Date</th>
@@ -96,17 +96,17 @@ function Account() {
                 <th className="px-4 py-2 border">Game</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="text-sm font-mono">
               {games.games.map((game, index) => (
                 <tr key={index}>
-                  <td className="border px-4 py-2 w-1/6">
+                  <td className="border px-2 py-2 w-1/6">
                     {getTime(game.game_date)}
                   </td>
-                  <td className="border px-4 py-2 w-1/12">{game.winner}</td>
-                  <td className="border px-4 py-2 w-1/12">
+                  <td className="border px-2 py-2 w-1/12">{game.winner}</td>
+                  <td className="border px-2 py-2 w-1/12">
                     {game.player_colour}
                   </td>
-                  <td className="border px-4 py-2 break-all">
+                  <td className="border px-2 py-2 break-all">
                     <div>{game.game}</div>
                   </td>
                 </tr>

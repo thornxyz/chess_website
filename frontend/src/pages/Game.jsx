@@ -418,7 +418,7 @@ function Game(props) {
           ))}
         </div>
 
-        <div className="h-6">
+        <div className="h-6" id="loading-sm">
           {isLoading && (
             <div className="text-center text-white text-sm font-medium">
               Loading...
@@ -520,27 +520,37 @@ function Game(props) {
             </div>
           </div>
 
-          <div
-            className="overflow-auto ml-6 px-4 py-1 bg-gray-900 flex-col rounded-md"
-            id="movesArea"
-            ref={movesRef}
-          >
-            <h2 className="text-white font-bold mb-2 text-center">Moves:</h2>
-            <div id="moveul">
-              <ul className="text-white text-left w-full" id="moveLog">
-                {moves.map((move, index) => (
-                  <li
-                    key={index}
-                    className="font-medium text-sm text-left"
-                    id="moveElement"
-                  >
-                    <span className="font-thin">
-                      {index % 2 === 0 ? index / 2 + 1 + ". " : ""}
-                    </span>
-                    {move}
-                  </li>
-                ))}
-              </ul>
+          <div id="right-side">
+            <div className="h-6 mb-1 w-full ml-6" id="loading-lg">
+              {isLoading && (
+                <div className="text-center text-white text-sm font-medium">
+                  Loading...
+                </div>
+              )}
+            </div>
+
+            <div
+              className="overflow-auto px-4 py-1 bg-gray-900 rounded-md"
+              id="movesArea"
+              ref={movesRef}
+            >
+              <h2 className="text-white font-bold mb-2 text-center">Moves:</h2>
+              <div id="moveul">
+                <ul className="text-white text-left w-full" id="moveLog">
+                  {moves.map((move, index) => (
+                    <li
+                      key={index}
+                      className="font-medium text-sm text-left"
+                      id="moveElement"
+                    >
+                      <span className="font-thin">
+                        {index % 2 === 0 ? index / 2 + 1 + ". " : ""}
+                      </span>
+                      {move}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
         </div>

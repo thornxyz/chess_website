@@ -16,6 +16,7 @@ const user = process.env.USER;
 const password = process.env.PASSWORD;
 const database = process.env.DATABASE;
 const origin = process.env.ORIGIN;
+const dbPort = process.env.DB_PORT;
 
 const app = express();
 app.use(express.json());
@@ -26,18 +27,58 @@ app.use(cors({
 }));
 app.use(cookieParser());
 
-// Create MySQL pool
 const pool = mysql2.createPool({
-    host,
-    user,
-    password,
-    database,
+    host: host,
+    port: dbPort,
+    user: user,
+    password: password,
+    database: database,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
 });
 
-// Optional: Keep connection alive
+const createTables = async () => {
+    try {
+        const conn = await pool.getConnection();
+
+        await conn.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(20) UNIQUE NOT NULL,
+                pwd_hash VARCHAR(100) NOT NULL,
+                doj DATE NOT NULL
+            );
+        `);
+
+        await conn.query(`
+            CREATE TABLE IF NOT EXISTS chess_games (
+                game_id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(20) NOT NULL,
+                game_date DATETIME NOT NULL,
+                winner VARCHAR(10) NOT NULL,
+                player_colour VARCHAR(10) NOT NULL,
+                FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+            );
+        `);
+
+        await conn.query(`
+            CREATE TABLE IF NOT EXISTS game_data (
+                game_id INT PRIMARY KEY,
+                game TEXT,
+                FOREIGN KEY (game_id) REFERENCES chess_games(game_id) ON DELETE CASCADE
+            );
+        `);
+
+        conn.release();
+        console.log("Tables ensured");
+    } catch (err) {
+        console.error("Failed to create tables:", err);
+    }
+};
+
+await createTables();
+
 setInterval(async () => {
     try {
         await pool.query('SELECT 1');
@@ -46,6 +87,8 @@ setInterval(async () => {
         console.error('Error keeping connection alive:', err);
     }
 }, 60000);
+
+// Auth and game endpoints (unchanged)
 
 app.post('/register', async (req, res) => {
     if (!req.body.username || !req.body.password) {
@@ -193,5 +236,5 @@ app.post('/getDoj', async (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+    console.log(`✅ Server running on port ${port}`);
 });

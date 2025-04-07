@@ -1,5 +1,5 @@
 import express from 'express';
-import mysql2 from 'mysql2';
+import mysql2 from 'mysql2/promise';
 import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
@@ -26,88 +26,73 @@ app.use(cors({
 }));
 app.use(cookieParser());
 
-const db = mysql2.createConnection({
-    host: host,
-    user: user,
-    password: password,
-    database: database
+// Create MySQL pool
+const pool = mysql2.createPool({
+    host,
+    user,
+    password,
+    database,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 });
 
-db.connect(function (err) {
-    if (err) {
-        console.error("Error connecting to database:", err);
-    } else {
-        console.log("Connected to database!");
+// Optional: Keep connection alive
+setInterval(async () => {
+    try {
+        await pool.query('SELECT 1');
+        console.log('Connection kept alive');
+    } catch (err) {
+        console.error('Error keeping connection alive:', err);
     }
-});
+}, 60000);
 
-setInterval(() => {
-    db.query('SELECT 1', (err, result) => {
-        if (err) {
-            console.error('Error keeping connection alive:', err);
-        } else {
-            console.log('Connection kept alive');
-        }
-    });
-}, 60000); // Execute every minute
-
-
-app.post('/register', (req, res) => {
+app.post('/register', async (req, res) => {
     if (!req.body.username || !req.body.password) {
         return res.status(400).json({ error: "Username or password missing" });
     }
 
     const sql = "INSERT INTO users (username, pwd_hash, doj) VALUES (?, ?, ?)";
     const { username, password } = req.body;
-
     const doj = moment().format('YYYY-MM-DD');
 
-    bcrypt.hash(password.toString(), salt, (err, hash) => {
-        if (err) {
-            console.error("Error hashing password:", err);
-            return res.status(500).json({ error: "Error hashing password" });
-        }
-
-        db.query(sql, [username, hash, doj], (err, result) => {
-            if (err) {
-                console.error("Error inserting into database:", err);
-                return res.status(500).json({ error: err });
-            }
-
-            return res.json({ Status: "Success" });
-        });
-    });
+    try {
+        const hash = await bcrypt.hash(password.toString(), salt);
+        await pool.query(sql, [username, hash, doj]);
+        return res.json({ Status: "Success" });
+    } catch (err) {
+        console.error("Error inserting into database:", err);
+        return res.status(500).json({ error: "Database insert error" });
+    }
 });
 
-
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
+    const { username, password } = req.body;
     const sql = 'SELECT * FROM users WHERE username = ?';
-    db.query(sql, [req.body.username], (err, data) => {
-        if (err) return res.json({ Error: "Login error" });
-        if (data.length > 0) {
-            bcrypt.compare(req.body.password.toString(), data[0].pwd_hash, (err, response) => {
-                if (err) return res.json({ Error: "Password compare error" });
-                if (response) {
-                    const username = data[0].username;
-                    const token = jwt.sign({ username }, jwtsecret, { expiresIn: '1d' });
-                    res.cookie("token", token, {
-                        httpOnly: true,
-                        secure: true,
-                        sameSite: 'none'
-                    });
-                    return res.json({ Status: "Success" });
 
-                } else {
-                    return res.json({ Error: "Password not matched" });
-                }
-            })
-        } else {
-            return res.json({ Error: "User not found" });
-        }
-    })
-})
+    try {
+        const [data] = await pool.query(sql, [username]);
 
-app.post('/addChessGame', (req, res) => {
+        if (data.length === 0) return res.json({ Error: "User not found" });
+
+        const isMatch = await bcrypt.compare(password.toString(), data[0].pwd_hash);
+        if (!isMatch) return res.json({ Error: "Password not matched" });
+
+        const token = jwt.sign({ username }, jwtsecret, { expiresIn: '1d' });
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none'
+        });
+        return res.json({ Status: "Success" });
+
+    } catch (err) {
+        console.error("Login error:", err);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+app.post('/addChessGame', async (req, res) => {
     const { username, game_date, winner, player_colour } = req.body;
 
     if (!username || !game_date || !winner) {
@@ -115,18 +100,18 @@ app.post('/addChessGame', (req, res) => {
     }
 
     const sql = "INSERT INTO chess_games (username, game_date, winner, player_colour) VALUES (?, ?, ?, ?)";
-    db.query(sql, [username, game_date, winner, player_colour], (err, result) => {
-        if (err) {
-            console.error("Error inserting into chess_games table:", err);
-            return res.status(500).json({ error: "Error inserting data" });
-        } else {
-            const gameId = result.insertId;
-            res.status(200).json({ gameId });
-        }
-    });
+
+    try {
+        const [result] = await pool.query(sql, [username, game_date, winner, player_colour]);
+        const gameId = result.insertId;
+        res.status(200).json({ gameId });
+    } catch (err) {
+        console.error("Error inserting into chess_games table:", err);
+        return res.status(500).json({ error: "Error inserting data" });
+    }
 });
 
-app.post('/addGameData', (req, res) => {
+app.post('/addGameData', async (req, res) => {
     const { gameId, gameData } = req.body;
 
     if (!gameId || !gameData) {
@@ -134,50 +119,56 @@ app.post('/addGameData', (req, res) => {
     }
 
     const sql = "INSERT INTO game_data (game_id, game) VALUES (?, ?)";
-    db.query(sql, [gameId, gameData], (err, result) => {
-        if (err) {
-            console.error("Error inserting into game_data table:", err);
-            return res.status(500).json({ error: "Error inserting data" });
-        } else {
-            res.status(200).json({ Status: "Success" });
-        }
-    });
-});
 
+    try {
+        await pool.query(sql, [gameId, gameData]);
+        res.status(200).json({ Status: "Success" });
+    } catch (err) {
+        console.error("Error inserting into game_data table:", err);
+        return res.status(500).json({ error: "Error inserting data" });
+    }
+});
 
 const verifyUser = (req, res, next) => {
     const token = req.cookies.token;
     if (!token) {
-        return res.json({ Error: "You are not authenticated" })
-    } else {
-        jwt.verify(token, jwtsecret, (err, decoded) => {
-            if (err) {
-                return res.json({ Error: "Invalid token" })
-            } else {
-                req.username = decoded.username;
-                next();
-            }
-        })
+        return res.json({ Error: "You are not authenticated" });
     }
-}
+
+    jwt.verify(token, jwtsecret, (err, decoded) => {
+        if (err) {
+            return res.json({ Error: "Invalid token" });
+        } else {
+            req.username = decoded.username;
+            next();
+        }
+    });
+};
 
 app.post('/getAllGames', async (req, res) => {
     const { username } = req.body;
-    const sql = "SELECT game_data.game, chess_games.game_date, chess_games.winner, chess_games.player_colour FROM chess_games JOIN game_data ON chess_games.game_id = game_data.game_id JOIN users ON users.username = chess_games.username WHERE users.username = ? ORDER BY chess_games.game_date DESC";
 
-    db.query(sql, [username], (err, result) => {
-        if (err) {
-            console.error('Error fetching games:', err);
-            return res.status(500).json({ error: 'Internal server error' });
-        }
+    const sql = `
+        SELECT game_data.game, chess_games.game_date, chess_games.winner, chess_games.player_colour
+        FROM chess_games
+        JOIN game_data ON chess_games.game_id = game_data.game_id
+        JOIN users ON users.username = chess_games.username
+        WHERE users.username = ?
+        ORDER BY chess_games.game_date DESC
+    `;
 
-        return res.json({ games: result });
-    });
+    try {
+        const [games] = await pool.query(sql, [username]);
+        return res.json({ games });
+    } catch (err) {
+        console.error('Error fetching games:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 app.get('/', verifyUser, (req, res) => {
     return res.json({ Status: "Success", username: req.username });
-})
+});
 
 app.get('/logout', (req, res) => {
     res.clearCookie("token", {
@@ -188,21 +179,19 @@ app.get('/logout', (req, res) => {
     return res.json({ Status: "Success", message: "Logged out" });
 });
 
-app.post('/getDoj', (req, res) => {
+app.post('/getDoj', async (req, res) => {
     const { username } = req.body;
-    const sql = "select doj from users where username = ?;";
+    const sql = "SELECT doj FROM users WHERE username = ?";
 
-    db.query(sql, [username], (err, result) => {
-        if (err) {
-            console.error('Error fetching doj:', err);
-            return res.status(500).json({ error: 'Internal server error' });
-        }
-
+    try {
+        const [result] = await pool.query(sql, [username]);
         return res.json({ doj: result });
-    });
-})
-
+    } catch (err) {
+        console.error('Error fetching doj:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
-})
+});
